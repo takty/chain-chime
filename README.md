@@ -15,6 +15,12 @@ Tests use Node.js 24, which can run TypeScript directly. Yarn uses the standard 
 
 In VS Code, open a TypeScript file, run **TypeScript: Select TypeScript Version** from the Command Palette, and choose **Use Workspace Version**. The workspace settings point to `node_modules/typescript/lib`. If old diagnostics remain, run **TypeScript: Restart TS Server**.
 
+## Deployment
+
+Run `yarn build` and upload the contents of `dist` to the target directory, keeping the `assets` folder alongside `index.html`. For example, upload them to `https://takty.net/app/chain-chime/`.
+
+`vite.config.ts` uses `base: './'`, so built asset URLs are relative to the page and work in a subdirectory. Open directory URLs with a trailing slash, such as `/app/chain-chime/`, or open `/app/chain-chime/index.html` directly.
+
 ## Files and customization
 
 - `src/logic/`: State changes, timing, elapsed time calculations, and URL conversion. No dependency on the DOM or Alpine.
