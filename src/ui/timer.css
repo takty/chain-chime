@@ -1,0 +1,33 @@
+/* Customize the appearance here without changing the timer logic. */
+:root {
+  --timer-card-width: 290px;
+  --timer-card-gap: 16px;
+  --timer-track-height: 18px;
+  --timer-countdown-size: 52px;
+  --timer-fill-color: #398369;
+  --timer-track-color: #e8eeea;
+  --timer-mark-color: #fff;
+  --timer-current-border: #398369;
+}
+.timer-list { display: flex; align-items: stretch; gap: var(--timer-card-gap); overflow-x: auto; padding: 16px var(--timer-scroll-inset, 4px) 16px; scroll-snap-type: x proximity; }
+.timer-card { position: relative; flex: 0 0 var(--timer-card-width); padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: white; scroll-snap-align: center; }
+.timer-card[data-phase='current'] { border-color: var(--timer-current-border); box-shadow: 0 0 0 1px var(--timer-current-border); }
+.timer-card[data-phase='finished'] { background: #f0f4f1; }
+.timer-card-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.phase-label { font-size: 12px; color: var(--muted); }
+.timer-card[data-phase='current'] .phase-label { color: var(--accent); font-weight: 600; }
+.timer-display { padding: 25px 0 22px; }
+.timer-remaining { font-size: var(--timer-countdown-size); line-height: 1.2; font-weight: 500; letter-spacing: -.04em; font-variant-numeric: tabular-nums; margin: 3px 0 17px; }
+.timer-track { position: relative; height: var(--timer-track-height); background: var(--timer-track-color); overflow: hidden; border-radius: 4px; }
+.timer-fill { height: 100%; background: var(--timer-fill-color); }
+.timer-mark { position: absolute; top: 0; bottom: 0; width: 2px; transform: translateX(-1px); background: var(--timer-mark-color); }
+.timer-elapsed { margin-top: 8px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.timer-settings { display: flex; gap: 12px; padding: 18px 0; margin: 0; border: 0; border-top: 1px solid var(--border); }
+.timer-settings label { flex: 1; min-width: 0; font-size: 12px; color: var(--muted); }
+.timer-settings input { width: 100%; margin-top: 7px; padding: 9px 10px; border: 1px solid var(--border); border-radius: 6px; background: white; color: #243933; }
+.timer-settings:disabled { opacity: .5; }
+.timer-actions { display: flex; gap: 6px; }
+.timer-actions button { padding: 8px 10px; font-size: 12px; }
+.timer-actions .delete-button { margin-left: auto; color: #92544d; }
+
+

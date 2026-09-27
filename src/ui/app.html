@@ -1,0 +1,52 @@
+<main class="app-shell" x-data="chainTimer" x-cloak>
+	<header class="app-header">
+		<div><h1>Chain Chime</h1></div>
+	</header>
+	<section class="overview" aria-label="Overall progress">
+		<div class="overview-top">
+			<div><p class="total-time"><span x-text="formatTime(state.elapsedMs)"></span><span class="time-separator"> / </span><span x-text="formatTime(state.totalMs)"></span></p></div>
+			<div class="global-actions">
+				<button type="button" class="primary" @click="actions.toggle()" :disabled="state.status === 'completed'" x-text="state.status === 'running' ? 'Pause' : 'Start'"></button>
+				<button type="button" @click="actions.reset()" :disabled="!state.canEdit">Reset all</button>
+			</div>
+		</div>
+		<div class="overall-track" role="progressbar" aria-label="Total elapsed time" aria-valuemin="0" :aria-valuemax="state.totalMs" :aria-valuenow="state.elapsedMs" :aria-valuetext="formatTime(state.elapsedMs) + ' / ' + formatTime(state.totalMs)">
+			<div class="overall-fill" :style="{ width: (state.elapsedMs / state.totalMs * 100) + '%' }"></div>
+		</div>
+	</section>
+	<section class="timers-section" aria-labelledby="timers-heading">
+		<div class="section-header">
+			<h2 id="timers-heading">Timers <span class="timer-count" x-text="state.timers.length + ' / ' + limits.maxCount"></span></h2>
+			<button type="button" @click="actions.add()" :disabled="!state.canAdd">+ Add</button>
+		</div>
+		<!-- Keep cards in a row. Edit timer.css to change their appearance. -->
+		<div class="timer-list" tabindex="0" role="region" aria-label="Timers (scroll horizontally)">
+			<template x-for="timer in state.timers" :key="timer.index">
+				<article class="timer-card" :data-phase="timer.phase" :aria-current="timer.phase === 'current' ? 'step' : null" :aria-labelledby="'timer-title-' + timer.index">
+					<div class="timer-card-header"><h3 :id="'timer-title-' + timer.index" x-text="'Timer ' + (timer.index + 1)"></h3><span class="phase-label" x-text="phaseLabel(timer.phase)"></span></div>
+					<!-- Edit this section to change the timer display. -->
+					<div class="timer-display">
+						<p class="timer-remaining" x-text="formatTime(timer.remainingMs, true)"></p>
+						<div class="timer-track" role="progressbar" :aria-label="'Timer ' + (timer.index + 1) + ' progress'" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="Math.round(timer.progress * 100)" :aria-valuetext="'Time left: ' + formatTime(timer.remainingMs, true)">
+							<div class="timer-fill" :style="{ width: (timer.progress * 100) + '%' }"></div>
+							<template x-for="position in marks(timer.divisions)" :key="position"><span class="timer-mark" :style="{ left: position + '%' }" aria-hidden="true"></span></template>
+						</div>
+						<p class="timer-elapsed">Elapsed <span x-text="formatTime(timer.elapsedMs)"></span> / <span x-text="timer.minutes + ':00'"></span></p>
+					</div>
+					<fieldset class="timer-settings" :disabled="!state.canEdit">
+						<legend class="sr-only" x-text="'Timer ' + (timer.index + 1) + ' settings'"></legend>
+						<label>Minutes<input type="number" required step="1" :min="limits.minMinutes" :max="limits.maxMinutes" :value="timer.minutes" @change="changeValue($event, timer.index, 'minutes')"></label>
+						<label>Divisions<input type="number" required step="1" :min="limits.minDivisions" :max="limits.maxDivisions" :value="timer.divisions" @change="changeValue($event, timer.index, 'divisions')"></label>
+					</fieldset>
+					<div class="timer-actions">
+						<button type="button" @click="actions.move(timer.index, -1)" :disabled="!state.canEdit || timer.index === 0" :aria-label="'Move timer ' + (timer.index + 1) + ' left'">←</button>
+						<button type="button" @click="actions.move(timer.index, 1)" :disabled="!state.canEdit || timer.index === state.timers.length - 1" :aria-label="'Move timer ' + (timer.index + 1) + ' right'">→</button>
+						<button type="button" @click="actions.resetTimer(timer.index)" :disabled="!state.canEdit">Reset</button>
+						<button type="button" class="delete-button" @click="actions.remove(timer.index)" :disabled="!state.canRemove">Delete</button>
+					</div>
+				</article>
+			</template>
+		</div>
+	</section>
+	<p class="error-message" role="alert" x-show="error" x-text="error"></p>
+</main>
