@@ -9,13 +9,12 @@
   --timer-mark-color: #fff;
   --timer-current-border: #398369;
 }
+.current-time, .total-time, .timer-remaining, .timer-elapsed span { font-family: Verdana, monospace; }
 .timer-list { display: flex; align-items: stretch; gap: var(--timer-card-gap); overflow-x: auto; padding: 16px var(--timer-scroll-inset, 4px) 16px; scroll-snap-type: x proximity; }
 .timer-card { position: relative; flex: 0 0 var(--timer-card-width); padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: white; scroll-snap-align: center; }
 .timer-card[data-phase='current'] { border-color: var(--timer-current-border); box-shadow: 0 0 0 1px var(--timer-current-border); }
 .timer-card[data-phase='finished'] { background: #f0f4f1; }
 .timer-card-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.phase-label { font-size: 12px; color: var(--muted); }
-.timer-card[data-phase='current'] .phase-label { color: var(--accent); font-weight: 600; }
 .timer-display { padding: 25px 0 22px; }
 .timer-remaining { font-size: var(--timer-countdown-size); line-height: 1.2; font-weight: 500; letter-spacing: -.04em; font-variant-numeric: tabular-nums; margin: 3px 0 17px; }
 .timer-track { position: relative; height: var(--timer-track-height); background: var(--timer-track-color); overflow: hidden; border-radius: 4px; }

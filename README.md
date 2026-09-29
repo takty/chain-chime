@@ -38,15 +38,16 @@ TypeScript files follow `coding-style.md`: tabs, semicolons, single quotes, expl
 
 ## Confirmed additions to the spec
 
-- The URL format is `?timers=1_50-3_30`: underscores separate timers, and a hyphen separates minutes from divisions. Omit zero divisions. The previous comma/colon format is not supported.
+- The URL format is `?ts=1_50-3_30`: underscores separate timers, and a hyphen separates minutes from divisions. Omit division values of 0 or 1. Missing or zero division values are read as 1. The previous comma/colon format is not supported.
 - If a URL contains more than 10 timers, use the first 10.
 - Replace each out-of-range URL entry with a 3-minute timer with no divisions.
 - Update the URL with `replaceState` only when settings change. Preserve other query parameters and the fragment. Do not normalize the URL on load.
 - Disable all resets and settings while running. Enable them when paused.
 - Allow settings changes and individual resets after completion. If elapsed time becomes less than the total duration, return to paused so the chain can resume.
 - Run cards from left to right. Use the left and right buttons to reorder them.
+- The overall progress panel has minus and plus buttons available in every state. Align elapsed seconds (including fractional seconds) to the local clock, then subtract or add one minute. Clamp to zero and total duration. Keep the current playback state unless reaching completion; adjusting back from completion returns to paused.
 
-A division value of n means n equal parts, as stated in the spec. Show n-1 inner marks; 0 and 1 have no inner marks. There is no sound. Show the current timer and completion on screen.
+A division value of n means n equal parts, as stated in the spec. The minimum and default are 1. Show n-1 inner marks; 1 has no inner marks. There is no sound. Show the current timer and completion on screen.
 
 ## Test coverage
 

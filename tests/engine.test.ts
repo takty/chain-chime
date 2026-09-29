@@ -10,7 +10,7 @@ interface TestClock {
 
 function setup(durations: number[] = [10, 50, 30]): TestClock {
 	let now: number = 0;
-	const engine = new TimerEngine(durations.map((minutes: number): TimerConfig => ({ minutes, divisions: 0 })), (): number => now);
+	const engine = new TimerEngine(durations.map((minutes: number): TimerConfig => ({ minutes, divisions: 1 })), (): number => now);
 	return {
 		engine,
 		advance(minutes: number): void {
@@ -54,7 +54,7 @@ test('returns to paused when a timer is added or extended after completion', ():
 	const { engine, advance } = setup([1]);
 	engine.start();
 	advance(1);
-	assert.equal(engine.update(0, { minutes: 2, divisions: 0 }), true);
+	assert.equal(engine.update(0, { minutes: 2, divisions: 1 }), true);
 	assert.equal(engine.snapshot().status, 'paused');
 	engine.start();
 	advance(1);
@@ -69,7 +69,7 @@ test('rejects edits and resets while running', (): void => {
 	assert.equal(engine.add(), false);
 	assert.equal(engine.remove(0), false);
 	assert.equal(engine.move(0, 1), false);
-	assert.equal(engine.update(0, { minutes: 1, divisions: 0 }), false);
+	assert.equal(engine.update(0, { minutes: 1, divisions: 1 }), false);
 	engine.resetTimer(0);
 	engine.reset();
 	assert.equal(engine.snapshot().elapsedMs, 5 * 60_000);
@@ -107,6 +107,60 @@ test('extending the chain does not restore elapsed time discarded by shortening 
 	assert.equal(engine.snapshot().elapsedMs, 60 * 60_000);
 	engine.add();
 	assert.equal(engine.snapshot().elapsedMs, 60 * 60_000);
+});
+
+test('aligns seconds before adding or subtracting a minute while paused', (): void => {
+	for (const offset of [-1, 1] as const) {
+		const { engine, advance } = setup();
+		engine.start();
+		advance(3.75);
+		engine.pause();
+		engine.adjustElapsed(offset, 20_500);
+		assert.equal(engine.snapshot().elapsedMs, (3 + offset) * 60_000 + 20_500);
+		assert.equal(engine.snapshot().status, 'paused');
+		advance(1);
+		assert.equal(engine.snapshot().elapsedMs, (3 + offset) * 60_000 + 20_500);
+	}
+});
+
+test('adjusts from the latest running time and crosses timer boundaries in both directions', (): void => {
+	let now: number = 0;
+	const engine = new TimerEngine([{ minutes: 1, divisions: 1 }, { minutes: 3, divisions: 1 }], (): number => now);
+	engine.start();
+	now = 65_000;
+	engine.adjustElapsed(1, 20_500);
+	assert.equal(engine.snapshot().elapsedMs, 140_500);
+	assert.equal(engine.snapshot().status, 'running');
+	assert.equal(engine.snapshot().timers[1].phase, 'current');
+	now += 500;
+	engine.tick();
+	assert.equal(engine.snapshot().elapsedMs, 141_000);
+	engine.adjustElapsed(-1, 21_000);
+	engine.adjustElapsed(-1, 21_000);
+	assert.equal(engine.snapshot().elapsedMs, 21_000);
+	assert.equal(engine.snapshot().timers[0].phase, 'current');
+	assert.equal(engine.snapshot().status, 'running');
+});
+
+test('clamps adjustments and allows adjusting after completion', (): void => {
+	const { engine, advance } = setup([1]);
+	engine.adjustElapsed(-1, 20_000);
+	assert.equal(engine.snapshot().elapsedMs, 0);
+	engine.start();
+	engine.adjustElapsed(-1, 20_000);
+	assert.equal(engine.snapshot().status, 'running');
+	engine.adjustElapsed(1, 20_000);
+	assert.equal(engine.snapshot().elapsedMs, 60_000);
+	assert.equal(engine.snapshot().status, 'completed');
+	advance(1);
+	engine.adjustElapsed(1, 20_000);
+	assert.equal(engine.snapshot().elapsedMs, 60_000);
+	engine.adjustElapsed(-1, 20_000);
+	assert.equal(engine.snapshot().elapsedMs, 20_000);
+	assert.equal(engine.snapshot().status, 'paused');
+	engine.start();
+	advance(0.5);
+	assert.equal(engine.snapshot().elapsedMs, 50_000);
 });
 
 test('enforces timer count limits and prevents changes through returned data', (): void => {

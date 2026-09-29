@@ -1,4 +1,4 @@
-import { MAX_TIMER_COUNT, MIN_TIMER_COUNT } from './constants.ts';
+import { MAX_TIMER_COUNT, MILLISECONDS_PER_MINUTE, MIN_TIMER_COUNT } from './constants.ts';
 import { clampElapsed, createDefaultTimer, deriveProgress, isValidTimer, isValidTimerList, rewindToTimer, totalDuration } from './timer.ts';
 import type { TimerConfig, TimerProgress } from './timer.ts';
 
@@ -77,6 +77,16 @@ export class TimerEngine {
 	reset(): void {
 		if (this.#running) return;
 		this.#elapsedMs = 0;
+	}
+
+	/** Align within the current minute, then shift elapsed time by one minute. */
+	adjustElapsed(offset: -1 | 1, clockMinuteMs: number): void {
+		if (!Number.isFinite(clockMinuteMs) || clockMinuteMs < 0 || clockMinuteMs >= MILLISECONDS_PER_MINUTE) return;
+		const wasRunning: boolean = this.#running;
+		this.tick();
+		const minutes: number = Math.floor(this.#elapsedMs / MILLISECONDS_PER_MINUTE);
+		this.#elapsedMs = clampElapsed(this.#timers, (minutes + offset) * MILLISECONDS_PER_MINUTE + clockMinuteMs);
+		this.#running = wasRunning && this.#elapsedMs < totalDuration(this.#timers);
 	}
 
 	// Settings -----------------------------------------------------------------

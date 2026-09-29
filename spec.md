@@ -51,12 +51,12 @@ Division marks split a timer's duration into equal parts.
 
 A division value of `n` means the display divides the duration into `n` equal parts.
 
-A value of `0` means no division marks.
+A value of `1` means no division marks.
 
 The current provisional range is integers from:
 
 ```text
-0–20
+1–20
 ```
 
 ### 2.4 Timer sequence
@@ -418,9 +418,9 @@ State = Paused
 
 ---
 
-## 15.2 The `timers` parameter
+## 15.2 The `ts` parameter
 
-Use the `timers` query parameter for timer settings.
+Use the `ts` query parameter for timer settings.
 
 Separate timers with underscores `_`. Use a hyphen `-` between the duration and the division value.
 
@@ -439,7 +439,7 @@ duration-divisions
 ### Example
 
 ```text
-?timers=10-5_50_30-3
+?ts=10-5_50_30-3
 ```
 
 means:
@@ -454,18 +454,19 @@ The order in the parameter is the execution order. Only the underscore/hyphen fo
 
 ---
 
-## 15.3 Omitting zero divisions
+## 15.3 Omitting zero or one divisions
 
-A division value of `0` means no division marks.
+The default division value is `1`, which means no division marks. When reading a URL, treat `0` as `1`. An omitted division value also means `1`.
 
 These entries mean the same thing:
 
 ```text
 10
 10-0
+10-1
 ```
 
-When writing a normalized URL, omit zero divisions.
+When writing a normalized URL, omit division values of `0` or `1`.
 
 The normalized form is:
 
@@ -477,7 +478,7 @@ The normalized form is:
 
 ## 15.4 Invalid entries
 
-Split the `timers` value at underscores and parse each entry separately.
+Split the `ts` value at underscores and parse each entry separately.
 
 If an entry cannot be read as a valid timer setting, use:
 
@@ -488,7 +489,7 @@ If an entry cannot be read as a valid timer setting, use:
 ### Example
 
 ```text
-?timers=10-5_abc_30
+?ts=10-5_abc_30
 ```
 
 loads as:
@@ -508,7 +509,7 @@ Treat an empty entry as invalid.
 For example:
 
 ```text
-?timers=10__30
+?ts=10__30
 ```
 
 loads as:
@@ -521,12 +522,12 @@ loads as:
 
 ---
 
-## 15.6 An empty `timers` value
+## 15.6 An empty `ts` value
 
 Treat this URL as one empty entry:
 
 ```text
-?timers=
+?ts=
 ```
 
 The result is one timer with:
@@ -537,9 +538,9 @@ The result is one timer with:
 
 ---
 
-## 15.7 No `timers` parameter
+## 15.7 No `ts` parameter
 
-If the `timers` parameter is missing, start with one timer with:
+If the `ts` parameter is missing, start with one timer with:
 
 ```text
 3 minutes, no division marks
@@ -548,11 +549,11 @@ If the `timers` parameter is missing, start with one timer with:
 All of these cases therefore start with one 3-minute timer:
 
 ```text
-No timers parameter
+No ts parameter
 
-?timers=
+?ts=
 
-?timers=abc
+?ts=abc
 ```
 
 ---
@@ -584,7 +585,7 @@ When an explicit settings change updates the URL, write the current settings in 
 For example, if the loaded URL is:
 
 ```text
-?timers=10-0_20-5
+?ts=10-0_20-5
 ```
 
 do not rewrite it just because it was loaded.
@@ -592,7 +593,7 @@ do not rewrite it just because it was loaded.
 When a later settings change updates the URL, normalize it like this:
 
 ```text
-?timers=10_20-5
+?ts=10_20-5
 ```
 
 ---
@@ -604,7 +605,7 @@ Do not rewrite the URL on load, even if it contains invalid entries.
 For example, opening:
 
 ```text
-?timers=10_abc_30
+?ts=10_abc_30
 ```
 
 uses these settings internally:
@@ -628,7 +629,7 @@ The current provisional values are:
 | Setting | Minimum | Maximum | Default |
 |---|---:|---:|---:|
 | Timer duration | 1 minute | 60 minutes | 3 minutes |
-| Divisions | 0 | 20 | 0 |
+| Divisions | 1 | 20 | 1 |
 | Timer count | 1 | 10 | 1 |
 
 Duration and divisions must be integers.
@@ -728,7 +729,7 @@ Total elapsed time = 0
 State = Paused
 ```
 
-### When the URL has no `timers` parameter
+### When the URL has no `ts` parameter
 
 Create one timer with:
 
@@ -812,7 +813,7 @@ The following points have not been explicitly settled in the discussions covered
 The app's maximum timer count is 10, but if:
 
 ```text
-?timers=...
+?ts=...
 ```
 
 contains 11 or more entries, the choice between these options is still open:
@@ -826,8 +827,8 @@ contains 11 or more entries, the choice between these options is still open:
 For example:
 
 ```text
-?timers=61
-?timers=10-21
+?ts=61
+?ts=10-21
 ```
 
 These values are numeric but exceed the current limits. Their handling has not been explicitly settled.
@@ -836,7 +837,7 @@ One option is to treat the entry as invalid and fall back to 3 minutes with no d
 
 ## 23.3 Other query parameters
 
-It is not yet settled whether to preserve query parameters other than `timers` when updating settings.
+It is not yet settled whether to preserve query parameters other than `ts` when updating settings.
 
 ## 23.4 Display and UI
 
@@ -857,3 +858,13 @@ This spec does not yet define:
 - Accessibility details
 
 Define these separately when planning the display.
+
+## 24. Adjusting elapsed time to the clock
+
+Place minus and plus buttons inside the overall time panel. Both buttons remain available while running, paused, and completed.
+
+On each click, first bring running elapsed time up to date. Replace the seconds and fractional seconds within its minute with those of the current local clock, then subtract or add one minute. For example, with elapsed time 3 minutes 45 seconds and clock time 10:12:20, plus produces 4 minutes 20 seconds and minus produces 2 minutes 20 seconds.
+
+Clamp the result to the range from zero to total duration. Derive all timer progress and the current timer from the adjusted elapsed time. Preserve running or paused state unless the result reaches total duration, which completes the chain. Adjusting back from completion returns to paused, consistent with other elapsed-time changes after completion.
+
+These controls do not change timer settings, the URL, or the page title.

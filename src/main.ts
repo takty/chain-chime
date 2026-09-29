@@ -11,7 +11,7 @@ import {
 	MIN_DIVISION_LINES,
 	MAX_DIVISION_LINES,
 } from './logic/constants.ts';
-import { createView } from './ui/view.ts';
+import { createView, formatClockTime } from './ui/view.ts';
 import { TimerScroller } from './ui/timer-scroll.ts';
 import type { TimerConfig } from './logic/timer.ts';
 import type { Actions, DisplayTimer, TimerView } from './ui/view.ts';
@@ -29,9 +29,15 @@ function publish(): void {
 	});
 }
 
+function updateTitle(): void {
+	const minutes: string = engine.configuration().map((timer: TimerConfig): number => timer.minutes).join('_');
+	document.title = `Chain Chime ${minutes}`;
+}
+
 function edit(operation: () => boolean): void {
 	if (!operation()) return;
 	publish();
+	updateTitle();
 	try {
 		window.history.replaceState(window.history.state, '', writeTimers(window.location.href, engine.configuration()));
 		view.error = '';
@@ -41,6 +47,12 @@ function edit(operation: () => boolean): void {
 }
 
 const actions: Actions = {
+	adjustElapsed(offset: -1 | 1): void {
+		const now: Date = new Date();
+		engine.adjustElapsed(offset, now.getSeconds() * 1000 + now.getMilliseconds());
+		view.currentTime = formatClockTime(now);
+		publish();
+	},
 	toggle(): void {
 		if (engine.snapshot().status === 'running') engine.pause();
 		else engine.start();
@@ -79,15 +91,18 @@ const view: TimerView = Alpine.reactive(createView(engine.snapshot(), actions, {
 	maxCount     : MAX_TIMER_COUNT,
 }));
 
+view.currentTime = formatClockTime(new Date());
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = template;
 const scroller: TimerScroller = new TimerScroller(document.querySelector<HTMLElement>('.timer-list')!);
 Alpine.data('chainTimer', (): TimerView => view);
 Alpine.start();
 publish();
+updateTitle();
 
 // Measure time using the clock, not the number of callbacks. -------------------
 
 function refresh(): void {
+	view.currentTime = formatClockTime(new Date());
 	if (engine.snapshot().status !== 'running') return;
 	engine.tick();
 	publish();

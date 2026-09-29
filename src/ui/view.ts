@@ -20,6 +20,7 @@ export interface DisplayState {
 export interface Actions {
 	toggle(): void;
 	reset(): void;
+	adjustElapsed(offset: -1 | 1): void;
 	add(): void;
 	remove(index: number): void;
 	move(index: number, offset: number): void;
@@ -36,15 +37,19 @@ export interface InputLimits {
 /** Edit the time format here. Round time left up to the next second. */
 export function formatTime(milliseconds: number, remaining: boolean = false): string {
 	const seconds: number = Math.max(0, remaining ? Math.ceil(milliseconds / 1000) : Math.floor(milliseconds / 1000));
-	return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+	return `${Math.floor(seconds / 60)}′${String(seconds % 60).padStart(2, '0')}″`;
+}
+/** Format local clock time without seconds. */
+export function formatClockTime(date: Date): string {
+	return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
 export interface TimerView {
+	currentTime : string;
 	state      : DisplayState;
 	limits     : InputLimits;
 	actions    : Actions;
 	error      : string;
 	formatTime : typeof formatTime;
-	phaseLabel(phase: DisplayTimer['phase']): string;
 	marks(divisions: number): number[];
 	changeValue(event: Event, index: number, field: 'minutes' | 'divisions'): void;
 }
@@ -53,14 +58,12 @@ export interface TimerView {
 
 export function createView(state: DisplayState, actions: Actions, limits: InputLimits): TimerView {
 	return {
+		currentTime: '',
 		state,
 		limits,
 		actions,
 		error: '',
 		formatTime,
-		phaseLabel(phase: DisplayTimer['phase']): string {
-			return { waiting: 'Waiting', current: this.state.status === 'running' ? 'Running' : 'Current', finished: 'Done' }[phase];
-		},
 		marks(divisions: number): number[] {
 			return Array.from({ length: Math.max(0, divisions - 1) }, (_: unknown, index: number): number => (index + 1) / divisions * 100);
 		},

@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import { clampElapsed, deriveProgress, isValidTimer, rewindToTimer } from '../src/logic/timer.ts';
 
 const minutes = (value: number): number => value * 60_000;
-const timers = [10, 50, 30].map((value: number): TimerConfig => ({ minutes: value, divisions: 0 }));
+const timers = [10, 50, 30].map((value: number): TimerConfig => ({ minutes: value, divisions: 1 }));
 
 test('distributes 35 minutes as 10, 25, and 0 minutes', (): void => {
 	assert.deepEqual(deriveProgress(timers, minutes(35)).map((t: TimerProgress): number => t.elapsedMs), [10, 25, 0].map(minutes));
@@ -15,7 +15,7 @@ test('redistributes the same total elapsed time after reordering', (): void => {
 });
 
 test('shortening a timer moves elapsed time into later timers', (): void => {
-	const edited = [timers[0], { minutes: 10, divisions: 0 }, timers[2]];
+	const edited = [timers[0], { minutes: 10, divisions: 1 }, timers[2]];
 	assert.deepEqual(deriveProgress(edited, minutes(35)).map((t: TimerProgress): number => t.elapsedMs), [10, 10, 15].map(minutes));
 	assert.equal(clampElapsed(edited, minutes(70)), minutes(50));
 });
@@ -31,12 +31,12 @@ test('selects the next timer at a time boundary', (): void => {
 });
 
 test('validates integers and range limits', (): void => {
-	assert.equal(isValidTimer({ minutes: 1, divisions: 0 }), true);
+	assert.equal(isValidTimer({ minutes: 1, divisions: 1 }), true);
 	assert.equal(isValidTimer({ minutes: 60, divisions: 20 }), true);
 	for (const value of [0, 61, 1.5, NaN, Infinity]) {
-		assert.equal(isValidTimer({ minutes: value, divisions: 0 }), false);
+		assert.equal(isValidTimer({ minutes: value, divisions: 1 }), false);
 	}
-	for (const value of [-1, 21, 1.5, NaN]) {
+	for (const value of [-1, 0, 21, 1.5, NaN]) {
 		assert.equal(isValidTimer({ minutes: 3, divisions: value }), false);
 	}
 });

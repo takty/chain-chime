@@ -1,11 +1,14 @@
 <main class="app-shell" x-data="chainTimer" x-cloak>
 	<header class="app-header">
 		<div><h1>Chain Chime</h1></div>
+		<time class="current-time" :datetime="currentTime" aria-label="Current time" x-text="currentTime"></time>
 	</header>
 	<section class="overview" aria-label="Overall progress">
 		<div class="overview-top">
 			<div><p class="total-time"><span x-text="formatTime(state.elapsedMs)"></span><span class="time-separator"> / </span><span x-text="formatTime(state.totalMs)"></span></p></div>
 			<div class="global-actions">
+				<button type="button" @click="actions.adjustElapsed(-1)" aria-label="Align seconds and subtract one minute" title="Align seconds and subtract one minute">−</button>
+				<button type="button" @click="actions.adjustElapsed(1)" aria-label="Align seconds and add one minute" title="Align seconds and add one minute">+</button>
 				<button type="button" class="primary" @click="actions.toggle()" :disabled="state.status === 'completed'" x-text="state.status === 'running' ? 'Pause' : 'Start'"></button>
 				<button type="button" @click="actions.reset()" :disabled="!state.canEdit">Reset all</button>
 			</div>
@@ -23,7 +26,7 @@
 		<div class="timer-list" tabindex="0" role="region" aria-label="Timers (scroll horizontally)">
 			<template x-for="timer in state.timers" :key="timer.index">
 				<article class="timer-card" :data-phase="timer.phase" :aria-current="timer.phase === 'current' ? 'step' : null" :aria-labelledby="'timer-title-' + timer.index">
-					<div class="timer-card-header"><h3 :id="'timer-title-' + timer.index" x-text="'Timer ' + (timer.index + 1)"></h3><span class="phase-label" x-text="phaseLabel(timer.phase)"></span></div>
+					<div class="timer-card-header"><h3 :id="'timer-title-' + timer.index" x-text="'Timer ' + (timer.index + 1)"></h3></div>
 					<!-- Edit this section to change the timer display. -->
 					<div class="timer-display">
 						<p class="timer-remaining" x-text="formatTime(timer.remainingMs, true)"></p>
@@ -31,7 +34,7 @@
 							<div class="timer-fill" :style="{ width: (timer.progress * 100) + '%' }"></div>
 							<template x-for="position in marks(timer.divisions)" :key="position"><span class="timer-mark" :style="{ left: position + '%' }" aria-hidden="true"></span></template>
 						</div>
-						<p class="timer-elapsed">Elapsed <span x-text="formatTime(timer.elapsedMs)"></span> / <span x-text="timer.minutes + ':00'"></span></p>
+						<p class="timer-elapsed">Elapsed <span x-text="formatTime(timer.elapsedMs)"></span> / <span x-text="formatTime(timer.minutes * 60_000)"></span></p>
 					</div>
 					<fieldset class="timer-settings" :disabled="!state.canEdit">
 						<legend class="sr-only" x-text="'Timer ' + (timer.index + 1) + ' settings'"></legend>
