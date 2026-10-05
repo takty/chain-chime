@@ -1,6 +1,5 @@
 import Alpine from 'alpinejs';
 import './style.css';
-import './ui/timer.css';
 import template from './ui/app.html?raw';
 import { TimerEngine } from './logic/engine.ts';
 import { readTimers, writeTimers } from './logic/url.ts';

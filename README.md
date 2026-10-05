@@ -1,6 +1,6 @@
 # Chain Chime
 
-Vite + TypeScript + Alpine.js. Each timer is a card with its own settings. Cards stay in one row and scroll horizontally on narrow screens. The display uses HTML DOM elements and CSS only.
+Vite + TypeScript + Alpine.js + Tailwind CSS. Each timer is a card with its own settings. Cards stay in one row and scroll horizontally on narrow screens. The display uses HTML DOM elements and CSS only.
 
 ## Run and check
 
@@ -24,11 +24,10 @@ Run `yarn build` and upload the contents of `dist` to the target directory, keep
 ## Files and customization
 
 - `src/logic/`: State changes, timing, elapsed time calculations, and URL conversion. No dependency on the DOM or Alpine.
-- `src/ui/app.html`: The page template with Alpine directives. `.timer-display` contains each timer's display.
-- `src/ui/timer.css`: Cards, horizontal scrolling, time left, progress bars, and marks. Change the CSS variables at the top to adjust widths, spacing, text size, and colors.
+- `src/ui/app.html`: Tailwind CSS utility classes for cards, horizontal scrolling, time left, progress bars, marks, and responsive layout. Adjust the classes to change widths, spacing, and text sizes.
+- `src/style.css`: Tailwind theme colors and fonts, plus Alpine's initial-view hiding rule. Layout and component styles are defined in the HTML classes.
 - `src/ui/view.ts`: Display data, time formatting, and mark positions. Does not reference the timer logic.
 - `src/ui/timer-scroll.ts`: Centers the running card in the horizontal list on start, resume, and timer changes. Repeated ticks leave manual scrolling alone. Resizing centers the running card again; reduced-motion settings disable smooth scrolling.
-- `src/style.css`: Page layout and shared styles.
 - `src/main.ts`: The only place that connects the UI, logic, clock, and browser URL.
 - `src/logic/constants.ts`: Limits for duration, divisions, and timer count.
 
