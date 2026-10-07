@@ -62,14 +62,15 @@ test('returns to paused when a timer is added or extended after completion', ():
 	assert.equal(engine.snapshot().status, 'paused');
 });
 
-test('rejects edits and resets while running', (): void => {
+test('rejects adding, deleting, and resets while running', (): void => {
 	const { engine, advance } = setup();
 	engine.start();
 	advance(5);
 	assert.equal(engine.add(), false);
 	assert.equal(engine.remove(0), false);
-	assert.equal(engine.move(0, 1), false);
-	assert.equal(engine.update(0, { minutes: 1, divisions: 1 }), false);
+	assert.equal(engine.snapshot().canAdd, false);
+	assert.equal(engine.snapshot().canRemove, false);
+	assert.equal(engine.snapshot().canReset, false);
 	engine.resetTimer(0);
 	engine.reset();
 	assert.equal(engine.snapshot().elapsedMs, 5 * 60_000);
@@ -77,6 +78,63 @@ test('rejects edits and resets while running', (): void => {
 	engine.reset();
 	assert.equal(engine.snapshot().elapsedMs, 0);
 	assert.equal(engine.snapshot().status, 'paused');
+});
+
+test('reorders while running using the latest elapsed time and continues without double counting', (): void => {
+	let now: number = 0;
+	const engine = new TimerEngine([{ minutes: 10, divisions: 1 }, { minutes: 50, divisions: 1 }, { minutes: 30, divisions: 1 }], (): number => now);
+	engine.start();
+	now = 35 * 60_000;
+	assert.equal(engine.move(2, -2), true);
+	assert.equal(engine.snapshot().status, 'running');
+	assert.equal(engine.snapshot().elapsedMs, now);
+	assert.deepEqual(engine.snapshot().timers.map((timer: TimerProgress): number => timer.elapsedMs / 60_000), [30, 5, 0]);
+	now += 500;
+	engine.tick();
+	assert.equal(engine.snapshot().elapsedMs, 35 * 60_000 + 500);
+});
+
+test('edits durations and divisions while running and redistributes the latest elapsed time', (): void => {
+	let now: number = 0;
+	const engine = new TimerEngine([{ minutes: 10, divisions: 1 }, { minutes: 50, divisions: 1 }, { minutes: 30, divisions: 1 }], (): number => now);
+	engine.start();
+	now = 35 * 60_000;
+	assert.equal(engine.update(1, { minutes: 10, divisions: 3 }), true);
+	assert.equal(engine.snapshot().status, 'running');
+	assert.deepEqual(engine.snapshot().timers.map((timer: TimerProgress): number => timer.elapsedMs / 60_000), [10, 10, 15]);
+	now += 500;
+	assert.equal(engine.update(2, { minutes: 30, divisions: 5 }), true);
+	assert.equal(engine.snapshot().elapsedMs, now);
+	assert.equal(engine.snapshot().timers[2].divisions, 5);
+	now += 500;
+	engine.tick();
+	assert.equal(engine.snapshot().elapsedMs, 35 * 60_000 + 1000);
+});
+
+test('shortening during playback completes the chain and extending it does not resume automatically', (): void => {
+	const { engine, advance } = setup([10, 10]);
+	engine.start();
+	advance(15);
+	assert.equal(engine.update(1, { minutes: 1, divisions: 1 }), true);
+	assert.equal(engine.snapshot().status, 'completed');
+	assert.equal(engine.snapshot().elapsedMs, 11 * 60_000);
+	assert.equal(engine.snapshot().canReset, true);
+	advance(1);
+	assert.equal(engine.update(1, { minutes: 10, divisions: 1 }), true);
+	assert.equal(engine.snapshot().status, 'paused');
+	assert.equal(engine.snapshot().elapsedMs, 11 * 60_000);
+});
+
+test('rejects invalid settings and reorder positions during playback', (): void => {
+	const { engine } = setup([10, 20]);
+	engine.start();
+	assert.equal(engine.update(0, { minutes: 0, divisions: 1 }), false);
+	assert.equal(engine.update(0, { minutes: 10, divisions: 21 }), false);
+	assert.equal(engine.update(-1, { minutes: 10, divisions: 1 }), false);
+	assert.equal(engine.move(0, -1), false);
+	assert.equal(engine.move(0, 0.5), false);
+	assert.deepEqual(engine.configuration(), [{ minutes: 10, divisions: 1 }, { minutes: 20, divisions: 1 }]);
+	assert.equal(engine.snapshot().status, 'running');
 });
 
 test('reset all returns a completed chain to its initial paused state', (): void => {

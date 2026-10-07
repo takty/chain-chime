@@ -11,17 +11,31 @@ import {
 	MIN_DIVISION_LINES,
 	MAX_DIVISION_LINES,
 } from './logic/constants.ts';
-import { createView, formatClockTime } from './ui/view.ts';
+import { createView, formatClockTime, formatStartTime } from './ui/view.ts';
+import { UrlHistory } from './ui/url-history.ts';
 import type { TimerConfig } from './logic/timer.ts';
 import type { Actions, TimerView } from './ui/view.ts';
 
 // Connect the logic, UI, and browser APIs only in this file. --------------------
 
 const REFRESH_INTERVAL_MS = 100;
-const engine: TimerEngine = new TimerEngine(readTimers(window.location.href), (): number => performance.now());
+let engine: TimerEngine = new TimerEngine(readTimers(window.location.href), (): number => performance.now());
+const urlHistory = new UrlHistory({
+	currentUrl: (): string => window.location.href,
+	push: (url: string): void => window.history.pushState(window.history.state, '', url),
+	schedule: (callback: () => void, delayMs: number): number => window.setTimeout(callback, delayMs),
+	cancel: (id: number): void => window.clearTimeout(id),
+	report: (error: string): void => {
+		view.error = error;
+		viewStore.set({ ...view });
+	},
+});
 
 function publish(): void {
 	view.state = engine.snapshot();
+	const now: Date = new Date();
+	view.currentTime = formatClockTime(now);
+	view.startTime = formatStartTime(now, view.state.elapsedMs);
 	viewStore.set({ ...view });
 }
 
@@ -30,36 +44,35 @@ function updateTitle(): void {
 	document.title = `Chain Chime ${minutes}`;
 }
 
-function edit(operation: () => boolean): void {
+function edit(operation: () => boolean, deferred: boolean = false): void {
+	if (!deferred) urlHistory.flush();
 	if (!operation()) return;
 	publish();
 	updateTitle();
-	try {
-		window.history.replaceState(window.history.state, '', writeTimers(window.location.href, engine.configuration()));
-		view.error = '';
-	} catch {
-		view.error = 'Settings changed, but the URL could not be updated.';
-	}
-	viewStore.set({ ...view });
+	urlHistory.update(writeTimers(window.location.href, engine.configuration()), deferred);
 }
 
 const actions: Actions = {
 	adjustElapsed(offset: -1 | 1): void {
+		urlHistory.flush();
 		const now: Date = new Date();
 		engine.adjustElapsed(offset, now.getSeconds() * 1000 + now.getMilliseconds());
 		view.currentTime = formatClockTime(now);
 		publish();
 	},
 	toggle(): void {
+		urlHistory.flush();
 		if (engine.snapshot().status === 'running') engine.pause();
 		else engine.start();
 		publish();
 	},
 	reset(): void {
+		urlHistory.flush();
 		engine.reset();
 		publish();
 	},
 	resetTimer(index: number): void {
+		urlHistory.flush();
 		engine.resetTimer(index);
 		publish();
 	},
@@ -74,7 +87,7 @@ const actions: Actions = {
 	},
 	update(index: number, field: 'minutes' | 'divisions', value: number): void {
 		const timer: TimerConfig | undefined = engine.configuration()[index];
-		if (timer) edit((): boolean => engine.update(index, { ...timer, [field]: value }));
+		if (timer) edit((): boolean => engine.update(index, { ...timer, [field]: value }), true);
 	},
 };
 
@@ -103,21 +116,38 @@ updateTitle();
 // Measure time using the clock, not the number of callbacks. -------------------
 
 function refresh(): void {
-	view.currentTime = formatClockTime(new Date());
-	if (engine.snapshot().status !== 'running') {
-		viewStore.set({ ...view });
-		return;
-	}
 	engine.tick();
 	publish();
 }
 
+function restoreFromUrl(): void {
+	urlHistory.discard();
+	engine = new TimerEngine(readTimers(window.location.href), (): number => performance.now());
+	view.error = '';
+	publish();
+	updateTitle();
+}
+
+function handleVisibilityChange(): void {
+	if (document.visibilityState === 'hidden') urlHistory.flush();
+	refresh();
+}
+
+function handlePageHide(): void {
+	urlHistory.flush();
+}
+
 const interval: number = window.setInterval(refresh, REFRESH_INTERVAL_MS);
-document.addEventListener('visibilitychange', refresh);
+document.addEventListener('visibilitychange', handleVisibilityChange);
+window.addEventListener('popstate', restoreFromUrl);
+window.addEventListener('pagehide', handlePageHide);
 if (import.meta.hot) {
 	import.meta.hot.dispose((): void => {
 		window.clearInterval(interval);
-		document.removeEventListener('visibilitychange', refresh);
+		urlHistory.discard();
+		document.removeEventListener('visibilitychange', handleVisibilityChange);
+		window.removeEventListener('popstate', restoreFromUrl);
+		window.removeEventListener('pagehide', handlePageHide);
 		void unmount(app);
 	});
 }

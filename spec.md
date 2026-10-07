@@ -226,9 +226,9 @@ Resetting a completed sequence returns it to paused, so it can start again.
 
 ---
 
-## 7. Editing while paused
+## 7. Editing timers
 
-Edit timer settings while the sequence is paused.
+Allow duration changes, division changes, and reordering while running, paused, or completed.
 
 Support at least these operations:
 
@@ -239,7 +239,7 @@ Support at least these operations:
 - Change divisions
 - Reset an individual timer
 
-Do not allow these changes while running.
+Adding, deleting, and individual or overall resets remain unavailable while running. During a running edit, first account for elapsed time up to the edit, then derive progress from the updated settings and the same total elapsed time. Continue running unless the updated total duration is reached; in that case clamp elapsed time and complete the chain.
 
 ---
 
@@ -270,7 +270,7 @@ If there is only one timer, it cannot be deleted.
 
 ## 10. Reordering timers
 
-Allow timers to be reordered while paused.
+Allow timers to be reordered while running, paused, or completed.
 
 Reordering does not change total elapsed time.
 
@@ -280,7 +280,7 @@ Apply total elapsed time to the new sequence from the beginning.
 
 ## 11. Changing a duration
 
-Allow each timer's duration to be changed while paused.
+Allow each timer's duration to be changed while running, paused, or completed.
 
 In general, preserve total elapsed time when settings change.
 
@@ -572,7 +572,13 @@ This includes at least:
 - Changing a duration
 - Changing divisions
 
-There is no need to update the URL for Start, Pause, elapsed time, Reset all, or other actions that do not change timer settings.
+Use `history.pushState` when the settings URL changes. Do not add duplicate entries for an unchanged URL.
+
+Apply valid numeric input to the timers immediately, but update the URL and add a history entry only after 800 ms without another numeric change. Restart the delay after each change. Before Start, Pause, minute adjustments, resets, adding, deleting, or reordering, commit any pending numeric edit. Commit pending edits when the page becomes hidden or is left as well.
+
+Start, Pause, elapsed time, and resets do not create history entries themselves. They only commit pending settings changes, if any.
+
+On browser Back or Forward, discard pending edits and load the settings from the destination URL. Reset elapsed time to zero and return to paused, as when opening a settings URL.
 
 Do not include elapsed time in the URL.
 
@@ -867,4 +873,22 @@ On each click, first bring running elapsed time up to date. Replace the seconds 
 
 Clamp the result to the range from zero to total duration. Derive all timer progress and the current timer from the adjusted elapsed time. Preserve running or paused state unless the result reaches total duration, which completes the chain. Adjusting back from completion returns to paused, consistent with other elapsed-time changes after completion.
 
-These controls do not change timer settings, the URL, or the page title.
+These controls do not change timer settings or the page title. They update the URL only to commit a pending numeric settings edit, as described in section 16.1.
+
+## Overall progress divisions
+
+Divide the overall progress bar by timer durations. Place a white mark at each cumulative duration before the final timer, using the same mark styling as individual timer bars. Three 3-minute timers produce three equal segments; 3, 6, and 3 minutes produce segments in a 1:2:1 ratio. Recalculate boundaries from the current settings after duration, order, add, or delete changes. Individual division values do not affect the overall boundaries.
+
+## Effective start time
+
+Below the left edge of the overall progress bar, display `Started at HH:MM` in local time. Calculate it as current wall-clock time minus total elapsed time. Recalculate on every display refresh and after minute adjustments or resets. This is a derived time rather than a stored record of the first Start click; it also advances with the wall clock while paused or completed.
+
+## Timer card controls
+
+Put deletion at the left of the card's top row and the left/right movement buttons together at the right. Use a red, thin-outline SVG trash icon for deletion with an accessible timer-specific label. Place the individual Reset control at the right end of the elapsed-time row, retaining its own `timer-reset.svelte` component.
+
+Render left/right movement as one joined control in `timer-move.svelte`, and minus/plus elapsed adjustments as one joined control in `elapsed-adjust.svelte`. Each pair has a shared rounded outline, no gap, and a single center divider. Retain separate buttons with their existing actions and accessible labels; only the outer corners are rounded.
+
+Individual and overall reset buttons show a clock surrounded by two counterclockwise arrows. Keep the reset and trash artwork in `public/icons/reset.svg` and `public/icons/trash.svg`, loading them as external images rather than embedding SVG markup in the HTML. Keep accessible reset/delete labels and tooltips, and retain the existing running-state restrictions.
+
+Place the overall Reset immediately to the right of the elapsed/total display. Always reserve the width required for `total / total` with the current timer configuration. Shorter elapsed values and resets must not move the button; changing the configured total duration may update the reserved width. Keep the sizing copy hidden from both visual display and assistive technology.

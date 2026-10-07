@@ -13,7 +13,7 @@ export interface DisplayState {
 	elapsedMs : number;
 	totalMs   : number;
 	timers    : DisplayTimer[];
-	canEdit   : boolean;
+	canReset  : boolean;
 	canAdd    : boolean;
 	canRemove : boolean;
 }
@@ -43,8 +43,13 @@ export function formatTime(milliseconds: number, remaining: boolean = false): st
 export function formatClockTime(date: Date): string {
 	return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
+/** Derive the effective local start time from the displayed elapsed time. */
+export function formatStartTime(now: Date, elapsedMs: number): string {
+	return formatClockTime(new Date(now.getTime() - elapsedMs));
+}
 export interface TimerView {
 	currentTime : string;
+	startTime   : string;
 	state      : DisplayState;
 	limits     : InputLimits;
 	actions    : Actions;
@@ -59,6 +64,7 @@ export interface TimerView {
 export function createView(state: DisplayState, actions: Actions, limits: InputLimits): TimerView {
 	return {
 		currentTime: '',
+		startTime: '',
 		state,
 		limits,
 		actions,
@@ -70,8 +76,8 @@ export function createView(state: DisplayState, actions: Actions, limits: InputL
 		changeValue(event: Event, index: number, field: 'minutes' | 'divisions'): void {
 			const input = event.target as HTMLInputElement;
 			if (input.checkValidity()) actions.update(index, field, input.valueAsNumber);
-			else input.reportValidity();
-			input.value = String(this.state.timers[index][field]);
+			else if (event.type === 'change') input.reportValidity();
+			if (event.type === 'change') input.value = String(this.state.timers[index][field]);
 		},
 	};
 }

@@ -17,7 +17,7 @@
 
 	async function moveTimer(index: number, offset: -1 | 1, button: HTMLButtonElement): Promise<void> {
 		const destination: number = index + offset;
-		if (!snapshot.canEdit || destination < 0 || destination >= snapshot.timers.length) return;
+		if (destination < 0 || destination >= snapshot.timers.length) return;
 		const buttonLeft: number = button.getBoundingClientRect().left;
 		actions.move(index, offset);
 		await tick();

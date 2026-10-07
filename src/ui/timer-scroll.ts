@@ -8,6 +8,8 @@ export class TimerScroller {
 	#disposed          : boolean       = false;
 	#resizeFrame       : number | null = null;
 	#reorderInset      : number = 0;
+	#moveAnimation    : Animation | null = null;
+	#followingMove    : boolean = false;
 
 	constructor(list: HTMLElement) {
 		this.#list = list;
@@ -19,7 +21,7 @@ export class TimerScroller {
 				this.#resizeFrame = null;
 				if (this.#disposed) return;
 				this.#updateSpacing();
-				if (this.#currentIndex !== null) this.#centerCurrent('instant');
+				if (this.#currentIndex !== null && !this.#followingMove) this.#centerCurrent('instant');
 			});
 		});
 		this.#observer.observe(list);
@@ -29,6 +31,7 @@ export class TimerScroller {
 	update(index: number | null): void {
 		if (this.#disposed) return;
 		if (index === this.#currentIndex && index !== null) return;
+		if (index !== this.#currentIndex) this.#followingMove = false;
 		this.#currentIndex = index;
 		if (index !== null) {
 			this.#reorderInset = 0;
@@ -44,6 +47,7 @@ export class TimerScroller {
 		const card: HTMLElement | undefined = this.#list.querySelectorAll<HTMLElement>('.timer-card')[index];
 		const button: HTMLButtonElement | null = card?.querySelector<HTMLButtonElement>(`[data-move="${offset}"]`) ?? null;
 		if (!card || !button) return;
+		this.#followingMove = true;
 		if (this.#list.scrollWidth > this.#list.clientWidth) {
 			const cardBounds: DOMRect = card.getBoundingClientRect();
 			const listBounds: DOMRect = this.#list.getBoundingClientRect();
@@ -59,11 +63,21 @@ export class TimerScroller {
 			});
 		}
 		button.focus({ preventScroll: true });
+		this.#moveAnimation?.cancel();
+		this.#moveAnimation = null;
+		if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+			// Opacity leaves layout and pointer anchoring unchanged during repeat clicks.
+			this.#moveAnimation = card.animate([
+				{ opacity: 0.5 },
+				{ opacity: 1 },
+			], { duration: 240, easing: 'ease-out' });
+		}
 	}
 
 	dispose(): void {
 		this.#disposed = true;
 		this.#observer.disconnect();
+		this.#moveAnimation?.cancel();
 		if (this.#resizeFrame !== null) window.cancelAnimationFrame(this.#resizeFrame);
 	}
 

@@ -9,7 +9,7 @@ export interface TimerSnapshot {
 	elapsedMs : number;
 	totalMs   : number;
 	timers    : TimerProgress[];
-	canEdit   : boolean;
+	canReset  : boolean;
 	canAdd    : boolean;
 	canRemove : boolean;
 }
@@ -38,7 +38,7 @@ export class TimerEngine {
 			elapsedMs: this.#elapsedMs,
 			totalMs,
 			timers    : deriveProgress(this.#timers, this.#elapsedMs),
-			canEdit   : !this.#running,
+			canReset  : !this.#running,
 			canAdd    : !this.#running && this.#timers.length < MAX_TIMER_COUNT,
 			canRemove : !this.#running && this.#timers.length > MIN_TIMER_COUNT,
 		};
@@ -98,30 +98,33 @@ export class TimerEngine {
 	}
 
 	remove(index: number): boolean {
-		if (!this.#editableIndex(index) || this.#timers.length <= MIN_TIMER_COUNT) return false;
+		if (this.#running || !this.#validIndex(index) || this.#timers.length <= MIN_TIMER_COUNT) return false;
 		this.#timers.splice(index, 1);
 		this.#elapsedMs = clampElapsed(this.#timers, this.#elapsedMs);
 		return true;
 	}
 
 	update(index: number, timer: TimerConfig): boolean {
-		if (!this.#editableIndex(index) || !isValidTimer(timer)) return false;
+		if (!this.#validIndex(index) || !isValidTimer(timer)) return false;
 		const previous: TimerConfig = this.#timers[index];
 		if (previous.minutes === timer.minutes && previous.divisions === timer.divisions) return false;
+		this.tick();
 		this.#timers[index] = { ...timer };
 		this.#elapsedMs = clampElapsed(this.#timers, this.#elapsedMs);
+		if (this.#elapsedMs >= totalDuration(this.#timers)) this.#running = false;
 		return true;
 	}
 
 	move(index: number, offset: number): boolean {
 		const destination: number = index + offset;
-		if (!this.#editableIndex(index) || !this.#editableIndex(destination) || index === destination) return false;
+		if (!this.#validIndex(index) || !this.#validIndex(destination) || index === destination) return false;
+		this.tick();
 		const [timer] = this.#timers.splice(index, 1);
 		this.#timers.splice(destination, 0, timer);
 		return true;
 	}
 
-	#editableIndex(index: number): boolean {
-		return !this.#running && Number.isInteger(index) && index >= 0 && index < this.#timers.length;
+	#validIndex(index: number): boolean {
+		return Number.isInteger(index) && index >= 0 && index < this.#timers.length;
 	}
 }
