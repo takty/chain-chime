@@ -17,8 +17,3 @@
 	--color-timer: #398369;
 	--color-finished: #f0f4f1;
 }
-
-/* Alpine removes this attribute when the initial view is ready. */
-[x-cloak] {
-	display: none !important;
-}

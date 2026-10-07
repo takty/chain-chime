@@ -1,6 +1,7 @@
-import Alpine from 'alpinejs';
+import { mount, unmount } from 'svelte';
+import { writable } from 'svelte/store';
 import './style.css';
-import template from './ui/app.html?raw';
+import App from './ui/app.svelte';
 import { TimerEngine } from './logic/engine.ts';
 import { readTimers, writeTimers } from './logic/url.ts';
 import {
@@ -11,9 +12,8 @@ import {
 	MAX_DIVISION_LINES,
 } from './logic/constants.ts';
 import { createView, formatClockTime } from './ui/view.ts';
-import { TimerScroller } from './ui/timer-scroll.ts';
 import type { TimerConfig } from './logic/timer.ts';
-import type { Actions, DisplayTimer, TimerView } from './ui/view.ts';
+import type { Actions, TimerView } from './ui/view.ts';
 
 // Connect the logic, UI, and browser APIs only in this file. --------------------
 
@@ -22,10 +22,7 @@ const engine: TimerEngine = new TimerEngine(readTimers(window.location.href), ()
 
 function publish(): void {
 	view.state = engine.snapshot();
-	void Alpine.nextTick((): void => {
-		const index: number = view.state.timers.findIndex((timer: DisplayTimer): boolean => timer.phase === 'current');
-		scroller.update(view.state.status === 'running' ? index : null);
-	});
+	viewStore.set({ ...view });
 }
 
 function updateTitle(): void {
@@ -43,6 +40,7 @@ function edit(operation: () => boolean): void {
 	} catch {
 		view.error = 'Settings changed, but the URL could not be updated.';
 	}
+	viewStore.set({ ...view });
 }
 
 const actions: Actions = {
@@ -82,19 +80,23 @@ const actions: Actions = {
 
 // UI setup --------------------------------------------------------------------
 
-const view: TimerView = Alpine.reactive(createView(engine.snapshot(), actions, {
+const view: TimerView = createView(engine.snapshot(), actions, {
 	minMinutes   : MIN_TIMER_MINUTES,
 	maxMinutes   : MAX_TIMER_MINUTES,
 	minDivisions : MIN_DIVISION_LINES,
 	maxDivisions : MAX_DIVISION_LINES,
 	maxCount     : MAX_TIMER_COUNT,
-}));
+});
+
+// Keep input restoration connected to the latest snapshot after an action.
+view.changeValue = view.changeValue.bind(view);
 
 view.currentTime = formatClockTime(new Date());
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = template;
-const scroller: TimerScroller = new TimerScroller(document.querySelector<HTMLElement>('.timer-list')!);
-Alpine.data('chainTimer', (): TimerView => view);
-Alpine.start();
+const viewStore = writable<TimerView>({ ...view });
+const app = mount(App, {
+	target: document.querySelector<HTMLDivElement>('#app')!,
+	props: { view: viewStore },
+});
 publish();
 updateTitle();
 
@@ -102,7 +104,10 @@ updateTitle();
 
 function refresh(): void {
 	view.currentTime = formatClockTime(new Date());
-	if (engine.snapshot().status !== 'running') return;
+	if (engine.snapshot().status !== 'running') {
+		viewStore.set({ ...view });
+		return;
+	}
 	engine.tick();
 	publish();
 }
@@ -113,6 +118,6 @@ if (import.meta.hot) {
 	import.meta.hot.dispose((): void => {
 		window.clearInterval(interval);
 		document.removeEventListener('visibilitychange', refresh);
-		scroller.dispose();
+		void unmount(app);
 	});
 }

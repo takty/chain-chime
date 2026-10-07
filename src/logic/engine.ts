@@ -14,7 +14,7 @@ export interface TimerSnapshot {
 	canRemove : boolean;
 }
 
-/** No DOM, Alpine, or URL updates. Inject a clock to test elapsed time. */
+/** No DOM, UI framework, or URL updates. Inject a clock to test elapsed time. */
 export class TimerEngine {
 	#timers       : TimerConfig[];
 	#elapsedMs    : number = 0;
