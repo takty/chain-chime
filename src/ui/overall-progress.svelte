@@ -16,10 +16,10 @@
 	});
 </script>
 
-<section class="rounded-3xl border border-solid border-slate-300 bg-white p-6 max-sm:p-4" aria-label="Overall progress">
-	<div class="flex flex-wrap items-center justify-between gap-x-5 gap-y-3">
-		<div class="flex items-center gap-3">
-			<p class="m-0 mt-[-0.1em] grid whitespace-nowrap font-clock text-3xl tabular-nums max-sm:text-2xl">
+<section class="rounded-3xl border border-solid border-slate-300 bg-white p-5" aria-label="Overall progress">
+	<div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-5">
+		<div class="flex items-center gap-2">
+			<p class="m-0 mt-[-0.1em] grid whitespace-nowrap font-clock text-3xl tabular-nums">
 				<!-- Reserve the completed display width so elapsed digit changes cannot move Reset. -->
 				<span class="invisible col-start-1 row-start-1" aria-hidden="true">{formatTime(snapshot.totalMs)} / {formatTime(snapshot.totalMs)}</span>
 				<span class="col-start-1 row-start-1"><span>{formatTime(snapshot.elapsedMs)}</span><span class="text-slate-600"> / </span><span>{formatTime(snapshot.totalMs)}</span></span>

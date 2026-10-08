@@ -8,8 +8,8 @@
 
 <!-- Edit this section to change the timer display. -->
 <div class="pb-4">
-	<div class="mb-2 flex items-start justify-between gap-2">
-		<p class="m-0 font-clock text-5xl leading-tight font-medium tracking-tighter tabular-nums">{formatTime(timer.remainingMs, true)}</p>
+	<div class="mb-4 flex items-start justify-between gap-2">
+		<p class="m-0 font-clock text-5xl leading-10 font-medium tracking-tighter tabular-nums">{formatTime(timer.remainingMs, true)}</p>
 		<h3 class="m-0 flex size-6 shrink-0 items-center justify-center rounded-full bg-accent data-[phase=finished]:bg-accent/40 text-sm font-semibold leading-none text-white tabular-nums" data-phase={timer.phase} id={'timer-title-' + timer.index}><span class="sr-only">Timer </span>{timer.index + 1}</h3>
 	</div>
 	<div class="relative h-4 overflow-hidden rounded-sm bg-slate-200" role="progressbar" aria-label={'Timer ' + (timer.index + 1) + ' progress'} aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(timer.progress * 100)} aria-valuetext={'Time left: ' + formatTime(timer.remainingMs, true)}>
