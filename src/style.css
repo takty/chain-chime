@@ -6,14 +6,5 @@
 @theme {
 	--font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
 	--font-clock: Verdana, monospace;
-	--color-ink: #243933;
-	--color-page: #f5f7f5;
-	--color-accent: #216c55;
-	--color-accent-hover: #185640;
-	--color-outline: #d6dfd9;
-	--color-muted: #61716a;
-	--color-button-hover: #edf3ef;
-	--color-track: #e8eeea;
-	--color-timer: #398369;
-	--color-finished: #f0f4f1;
+	--color-accent: hsl(240, 60%, 30%);
 }
