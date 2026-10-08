@@ -40,8 +40,8 @@
 
 <section class="mt-6" aria-labelledby="timers-heading">
 	<div class="flex items-center justify-between gap-5">
-		<h2 class="m-0 inline-flex items-center gap-2 text-lg" id="timers-heading"><img class="block size-5" src={timerIcon} alt="" aria-hidden="true" /><span class="sr-only">Timers </span><span class="text-sm font-normal text-gray-600">{snapshot.timers.length + ' / ' + limits.maxCount}</span></h2>
-		<button class="inline-flex min-h-10 items-center gap-1 rounded-lg border border-solid enabled:cursor-pointer font-[inherit] [font-weight:inherit] leading-[inherit] disabled:opacity-40 border-neutral-300 bg-white enabled:[&:hover]:bg-taupe-100 px-4 py-2 text-[length:inherit] text-inherit" type="button" onclick={() => actions.add()} disabled={!snapshot.canAdd} aria-label="Add timer" title="Add timer"><img class="block size-4" src={plusIcon} alt="" aria-hidden="true" /><img class="block size-5" src={timerIcon} alt="" aria-hidden="true" /></button>
+		<h2 class="m-0 inline-flex items-center gap-2 text-lg" id="timers-heading"><img class="block size-5" src={timerIcon} alt="" aria-hidden="true" /><span class="sr-only">Timers </span><span class="text-sm font-normal text-slate-600">{snapshot.timers.length + ' / ' + limits.maxCount}</span></h2>
+		<button class="inline-flex min-h-10 items-center gap-1 rounded-lg border border-solid enabled:cursor-pointer font-[inherit] [font-weight:inherit] leading-[inherit] disabled:opacity-40 border-slate-300 bg-white enabled:[&:hover]:bg-taupe-100 px-4 py-2 text-[length:inherit] text-inherit" type="button" onclick={() => actions.add()} disabled={!snapshot.canAdd} aria-label="Add timer" title="Add timer"><img class="block size-4" src={plusIcon} alt="" aria-hidden="true" /><img class="block size-5" src={timerIcon} alt="" aria-hidden="true" /></button>
 	</div>
 	<!-- Keep cards in a row. Customize their appearance with the utility classes below. -->
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex (The horizontal scroll region must be keyboard focusable.) -->

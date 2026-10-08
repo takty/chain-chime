@@ -6,5 +6,5 @@
 @theme {
 	--font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
 	--font-clock: Verdana, monospace;
-	--color-accent: hsl(240, 60%, 30%);
+	--color-accent: oklch(39.8% 0.195 277.366);
 }
