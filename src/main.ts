@@ -3,6 +3,7 @@ import { writable } from 'svelte/store';
 import './style.css';
 import App from './ui/app.svelte';
 import { TimerEngine } from './logic/engine.ts';
+import { createSleepAwareClock } from './logic/clock.ts';
 import { readTimers, writeTimers } from './logic/url.ts';
 import {
 	MAX_TIMER_COUNT,
@@ -19,7 +20,8 @@ import type { Actions, TimerView } from './ui/view.ts';
 // Connect the logic, UI, and browser APIs only in this file. --------------------
 
 const REFRESH_INTERVAL_MS = 100;
-let engine: TimerEngine = new TimerEngine(readTimers(window.location.href), (): number => performance.now());
+const timerClock = createSleepAwareClock((): number => performance.now(), (): number => Date.now());
+let engine: TimerEngine = new TimerEngine(readTimers(window.location.href), timerClock);
 const urlHistory = new UrlHistory({
 	currentUrl: (): string => window.location.href,
 	push: (url: string): void => window.history.pushState(window.history.state, '', url),
@@ -122,7 +124,7 @@ function refresh(): void {
 
 function restoreFromUrl(): void {
 	urlHistory.discard();
-	engine = new TimerEngine(readTimers(window.location.href), (): number => performance.now());
+	engine = new TimerEngine(readTimers(window.location.href), timerClock);
 	view.error = '';
 	publish();
 	updateTitle();
