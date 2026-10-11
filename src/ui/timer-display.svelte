@@ -10,7 +10,7 @@
 <div class="pb-4">
 	<div class="mb-4 flex items-start justify-between gap-2">
 		<p class="m-0 font-clock text-5xl leading-11 font-medium tracking-tighter tabular-nums">{formatTime(timer.remainingMs, true)}</p>
-		<h3 class="m-0 flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-600/80 data-[phase=current]:bg-emerald-600/80 data-[phase=finished]:bg-slate-600/40 text-sm font-bold leading-none text-white tabular-nums" data-phase={timer.phase} id={'timer-title-' + timer.index}><span class="sr-only">Timer </span>{timer.index + 1}</h3>
+		<h3 class="m-0 flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-600/80 text-sm leading-none font-bold text-white tabular-nums data-[phase=finished]:bg-slate-600/40" data-phase={timer.phase} id={'timer-title-' + timer.index}><span class="sr-only">Timer </span>{timer.index + 1}</h3>
 	</div>
 
 	<div class="relative h-2 overflow-hidden rounded-sm bg-slate-300" role="progressbar" aria-label={'Timer ' + (timer.index + 1) + ' progress'} aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(timer.progress * 100)} aria-valuetext={'Time left: ' + formatTime(timer.remainingMs, true)}>
@@ -19,7 +19,7 @@
 	</div>
 
 	<div class="mt-4 flex items-center justify-between gap-2">
-		<p class="m-0 whitespace-nowrap text-xs text-slate-600 tabular-nums [&_span]:font-clock">Elapsed <span>{formatTime(timer.elapsedMs)}</span> / <span>{formatTime(timer.minutes * 60_000)}</span></p>
+		<p class="m-0 text-xs whitespace-nowrap text-slate-600 tabular-nums [&_span]:font-clock">Elapsed <span>{formatTime(timer.elapsedMs)}</span> / <span>{formatTime(timer.minutes * 60_000)}</span></p>
 		<TimerReset {timer} {view} />
 	</div>
 </div>

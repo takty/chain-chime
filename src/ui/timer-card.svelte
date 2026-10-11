@@ -9,7 +9,7 @@
 	let { timer, view, moveTimer }: { timer: DisplayTimer; view: TimerView; moveTimer: MoveTimer; } = $props();
 </script>
 
-<article class="shadow-xl bg-white/40 timer-card relative grow-0 shrink-0 basis-64 snap-center rounded-3xl border border-solid border-white/60 p-5 data-[phase=current]:border-emerald-300/60" data-phase={timer.phase} aria-current={timer.phase === 'current' ? 'step' : null} aria-labelledby={'timer-title-' + timer.index}>
+<article class="timer-card relative shrink-0 grow-0 basis-64 snap-center rounded-3xl border border-solid border-white/60 bg-white/40 p-5 shadow-xl data-[phase=current]:border-emerald-300/60" data-phase={timer.phase} aria-current={timer.phase === 'current' ? 'step' : null} aria-labelledby={'timer-title-' + timer.index}>
 	<TimerDisplay {timer} {view} />
 	<TimerSettings {timer} {view} />
 	<hr class="my-5 h-0 border-0 border-t border-solid border-slate-100" />
