@@ -16,7 +16,7 @@
 	});
 </script>
 
-<section class="rounded-3xl border border-solid border-white/60 bg-white/40 p-5 shadow-xl" aria-label="Overall progress">
+<section class="rounded-3xl border border-solid border-white/60 bg-white/40 p-5 shadow-xl mx-6 max-sm:mx-4" aria-label="Overall progress">
 	<div class="flex flex-wrap items-center justify-between gap-4">
 		<p class="m-0 mt-[-0.2em] grid font-clock text-3xl whitespace-nowrap tabular-nums">
 			<!-- Reserve the completed display width so elapsed digit changes cannot move the controls. -->

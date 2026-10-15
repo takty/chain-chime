@@ -8,7 +8,7 @@
 	let { view }: { view: Readable<TimerView> } = $props();
 </script>
 
-<main class="mx-auto w-full max-w-7xl p-6 max-sm:px-4">
+<main class="mx-auto w-full max-w-7xl flex flex-col gap-6">
 	<AppHeader currentTime={$view.currentTime} />
 	<OverallProgress view={$view} />
 	<TimerList view={$view} />
