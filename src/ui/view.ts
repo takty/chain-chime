@@ -59,6 +59,14 @@ export interface TimerView {
 	changeValue(event: Event, index: number, field: 'minutes' | 'divisions'): void;
 }
 
+/** Keep the effective start time stable during playback until explicitly rebased. */
+export function updateClockDisplay(view: Pick<TimerView, 'currentTime' | 'startTime' | 'state'>, now: Date, rebaseStart: boolean = false): void {
+	view.currentTime = formatClockTime(now);
+	if (view.state.status !== 'running' || rebaseStart || view.startTime === '') {
+		view.startTime = formatStartTime(now, view.state.elapsedMs);
+	}
+}
+
 // Display state ---------------------------------------------------------------
 
 export function createView(state: DisplayState, actions: Actions, limits: InputLimits): TimerView {

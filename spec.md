@@ -881,7 +881,7 @@ Divide the overall progress bar by timer durations. Place a white mark at each c
 
 ## Effective start time
 
-Below the left edge of the overall progress bar, display `Started at HH:MM` in local time. Calculate it as current wall-clock time minus total elapsed time. Recalculate on every display refresh and after minute adjustments or resets. This is a derived time rather than a stored record of the first Start click; it also advances with the wall clock while paused or completed.
+Below the left edge of the overall progress bar, display `Started at HH:MM` in local time. Calculate it as current wall-clock time minus total elapsed time when starting, resuming, or adjusting elapsed time, and retain that value during playback to avoid flicker at minute boundaries. For minute adjustments, use the same wall-clock sample for the adjustment and the start-time calculation. While paused or completed, recalculate on every display refresh, including after resets or URL restoration. This is an effective start time rather than a stored record of the first Start click.
 
 ## Timer card controls
 

@@ -12,7 +12,7 @@ import {
 	MIN_DIVISION_LINES,
 	MAX_DIVISION_LINES,
 } from './logic/constants.ts';
-import { createView, formatClockTime, formatStartTime } from './ui/view.ts';
+import { createView, formatClockTime, updateClockDisplay } from './ui/view.ts';
 import { UrlHistory } from './ui/url-history.ts';
 import type { TimerConfig } from './logic/timer.ts';
 import type { Actions, TimerView } from './ui/view.ts';
@@ -33,11 +33,9 @@ const urlHistory = new UrlHistory({
 	},
 });
 
-function publish(): void {
+function publish(now: Date = new Date(), rebaseStart: boolean = false): void {
 	view.state = engine.snapshot();
-	const now: Date = new Date();
-	view.currentTime = formatClockTime(now);
-	view.startTime = formatStartTime(now, view.state.elapsedMs);
+	updateClockDisplay(view, now, rebaseStart);
 	viewStore.set({ ...view });
 }
 
@@ -59,14 +57,14 @@ const actions: Actions = {
 		urlHistory.flush();
 		const now: Date = new Date();
 		engine.adjustElapsed(offset, now.getSeconds() * 1000 + now.getMilliseconds());
-		view.currentTime = formatClockTime(now);
-		publish();
+		publish(now, true);
 	},
 	toggle(): void {
 		urlHistory.flush();
+		const now: Date = new Date();
 		if (engine.snapshot().status === 'running') engine.pause();
 		else engine.start();
-		publish();
+		publish(now, true);
 	},
 	reset(): void {
 		urlHistory.flush();
