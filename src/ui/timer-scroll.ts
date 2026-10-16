@@ -8,7 +8,7 @@ export class TimerScroller {
 	#disposed          : boolean       = false;
 	#resizeFrame       : number | null = null;
 	#reorderInset      : number = 0;
-	#moveAnimation    : Animation | null = null;
+	#cardAnimation    : Animation | null = null;
 	#followingMove    : boolean = false;
 
 	constructor(list: HTMLElement) {
@@ -19,7 +19,7 @@ export class TimerScroller {
 			if (this.#resizeFrame !== null) return;
 			this.#resizeFrame = window.requestAnimationFrame((): void => {
 				this.#resizeFrame = null;
-				if (this.#disposed) return;
+				if (this.#disposed || this.#cardAnimation) return;
 				this.#updateSpacing();
 				if (this.#currentIndex !== null && !this.#followingMove) this.#centerCurrent('instant');
 			});
@@ -29,7 +29,7 @@ export class TimerScroller {
 
 	/** Call after the UI renders. Repeated ticks do not override manual scrolling. */
 	update(index: number | null): void {
-		if (this.#disposed) return;
+		if (this.#disposed || this.#cardAnimation) return;
 		if (index === this.#currentIndex && index !== null) return;
 		if (index !== this.#currentIndex) this.#followingMove = false;
 		this.#currentIndex = index;
@@ -41,9 +41,45 @@ export class TimerScroller {
 		if (index !== null) this.#centerCurrent('smooth');
 	}
 
+	/** Indicate direction before changing the index-based order. */
+	previewMove(index: number, offset: -1 | 1): Promise<boolean> {
+		return this.#preview(index, [
+			{ transform: 'translateX(0)', opacity: 1 },
+			{ transform: `translateX(${offset * 16}px)`, opacity: 0.65 },
+		], { duration: 160, easing: 'ease-out' });
+	}
+
+	/** Fade the actual card, retaining its place until deletion is committed. */
+	previewRemoval(index: number): Promise<boolean> {
+		return this.#preview(index, [
+			{ opacity: 1, transform: 'scale(1)' },
+			{ opacity: 0, transform: 'scale(0.96)' },
+		], { duration: 220, easing: 'cubic-bezier(0.55, 0, 1, 0.45)' });
+	}
+
+	async #preview(index: number, frames: Keyframe[], options: KeyframeAnimationOptions): Promise<boolean> {
+		if (this.#disposed || this.#cardAnimation) return false;
+		const card: HTMLElement | undefined = this.#list.querySelectorAll<HTMLElement>('.timer-card')[index];
+		if (!card) return false;
+		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true;
+		const animation: Animation = card.animate(frames, { ...options, fill: 'forwards' });
+		this.#cardAnimation = animation;
+		try {
+			await animation.finished;
+			return !this.#disposed && this.#cardAnimation === animation;
+		} catch {
+			return false;
+		}
+	}
+
+	cancelAnimation(): void {
+		this.#cardAnimation?.cancel();
+		this.#cardAnimation = null;
+	}
+
 	/** Call after reordering renders. Keep the same button under the pointer. */
 	followMove(index: number, offset: -1 | 1, buttonLeft: number): void {
-		if (this.#disposed) return;
+		if (this.#disposed || this.#cardAnimation) return;
 		const card: HTMLElement | undefined = this.#list.querySelectorAll<HTMLElement>('.timer-card')[index];
 		const button: HTMLButtonElement | null = card?.querySelector<HTMLButtonElement>(`[data-move="${offset}"]`) ?? null;
 		if (!card || !button) return;
@@ -63,21 +99,12 @@ export class TimerScroller {
 			});
 		}
 		button.focus({ preventScroll: true });
-		this.#moveAnimation?.cancel();
-		this.#moveAnimation = null;
-		if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-			// Opacity leaves layout and pointer anchoring unchanged during repeat clicks.
-			this.#moveAnimation = card.animate([
-				{ opacity: 0.5 },
-				{ opacity: 1 },
-			], { duration: 240, easing: 'ease-out' });
-		}
 	}
 
 	dispose(): void {
 		this.#disposed = true;
 		this.#observer.disconnect();
-		this.#moveAnimation?.cancel();
+		this.cancelAnimation();
 		if (this.#resizeFrame !== null) window.cancelAnimationFrame(this.#resizeFrame);
 	}
 

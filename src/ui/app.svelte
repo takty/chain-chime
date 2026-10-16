@@ -7,13 +7,14 @@
 	import TimerListHeader from './timer-list-header.svelte';
 
 	let { view }: { view: Readable<TimerView> } = $props();
+	let animating: boolean = $state(false);
 </script>
 
 <main class="mx-auto w-full max-w-7xl flex flex-col gap-6">
 	<AppHeader currentTime={$view.currentTime} />
 	<OverallProgress view={$view} />
-	<TimerListHeader view={$view} />
-	<TimerList view={$view} />
+	<TimerListHeader view={$view} {animating} />
+	<TimerList view={$view} bind:animating />
 	{#if $view.error}
 		<p class="m-0 mt-5 text-red-800" role="alert">{$view.error}</p>
 	{/if}
