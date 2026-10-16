@@ -1,8 +1,10 @@
 <script lang="ts">
 	import resetIcon from '../assets/icons/reset.svg?inline';
+	import startTimeIcon from '../assets/icons/start-time.svg?inline';
 	import type { TimerView } from './view.ts';
 	import { formatTime } from './view.ts';
 	import ElapsedAdjust from './elapsed-adjust.svelte';
+	import AutoStart from './auto-start.svelte';
 
 	let { view }: { view: TimerView; } = $props();
 	let snapshot = $derived(view.state);
@@ -31,9 +33,12 @@
 			<button class="min-h-10 min-w-24 rounded-lg border border-solid border-emerald-600/80 bg-emerald-600/80 px-4 py-2 font-[inherit] text-[length:inherit] [font-weight:inherit] text-white enabled:cursor-pointer disabled:opacity-40 enabled:[&:hover]:bg-emerald-900/80" type="button" onclick={() => actions.toggle()} disabled={snapshot.status === 'completed'}>{snapshot.status === 'running' ? 'Pause' : 'Start'}</button>
 		</div>
 	</div>
-	<div class="relative mt-5 h-2 overflow-hidden rounded-lg bg-slate-300" role="progressbar" aria-label="Total elapsed time" aria-valuemin="0" aria-valuemax={snapshot.totalMs} aria-valuenow={snapshot.elapsedMs} aria-valuetext={formatTime(snapshot.elapsedMs) + ' / ' + formatTime(snapshot.totalMs)}>
+	<div class="relative mt-4 h-2 overflow-hidden rounded-lg bg-slate-300" role="progressbar" aria-label="Total elapsed time" aria-valuemin="0" aria-valuemax={snapshot.totalMs} aria-valuenow={snapshot.elapsedMs} aria-valuetext={formatTime(snapshot.elapsedMs) + ' / ' + formatTime(snapshot.totalMs)}>
 		<div class="h-full bg-rose-600" style:width={(snapshot.elapsedMs / snapshot.totalMs * 100) + '%'}></div>
 		{#each boundaries as position (position)}<span class="absolute inset-y-0 w-1 -translate-x-1/2 bg-white/90" style:left={position + '%'} aria-hidden="true"></span>{/each}
 	</div>
-	<p class="m-0 mt-2 text-xs text-slate-600">Started at <span class="font-clock tabular-nums">{view.startTime}</span></p>
+	<div class="mt-4 flex flex-wrap items-center justify-between gap-2">
+		<p class="m-0 inline-flex items-center gap-2 text-xs text-slate-600" title="Started at"><img class="block size-5" src={startTimeIcon} alt="" aria-hidden="true" /><span class="sr-only">Started at </span><span class="font-clock tabular-nums">{view.startTime}</span></p>
+		<AutoStart time={view.autoStartTime} setTime={actions.setAutoStartTime} />
+	</div>
 </section>

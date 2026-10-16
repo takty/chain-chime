@@ -18,6 +18,7 @@ export interface DisplayState {
 	canRemove : boolean;
 }
 export interface Actions {
+	setAutoStartTime(time: string | null): void;
 	toggle(): void;
 	reset(): void;
 	adjustElapsed(offset: -1 | 1): void;
@@ -48,6 +49,7 @@ export function formatStartTime(now: Date, elapsedMs: number): string {
 	return formatClockTime(new Date(now.getTime() - elapsedMs));
 }
 export interface TimerView {
+	autoStartTime: string | null;
 	currentTime : string;
 	startTime   : string;
 	state      : DisplayState;
@@ -71,6 +73,7 @@ export function updateClockDisplay(view: Pick<TimerView, 'currentTime' | 'startT
 
 export function createView(state: DisplayState, actions: Actions, limits: InputLimits): TimerView {
 	return {
+		autoStartTime: null,
 		currentTime: '',
 		startTime: '',
 		state,

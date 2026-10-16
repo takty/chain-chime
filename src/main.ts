@@ -3,6 +3,7 @@ import { writable } from 'svelte/store';
 import './style.css';
 import App from './ui/app.svelte';
 import { TimerEngine } from './logic/engine.ts';
+import { AutoStart } from './logic/auto-start.ts';
 import { createSleepAwareClock } from './logic/clock.ts';
 import { readTimers, writeTimers } from './logic/url.ts';
 import {
@@ -20,6 +21,7 @@ import type { Actions, TimerView } from './ui/view.ts';
 // Connect the logic, UI, and browser APIs only in this file. --------------------
 
 const REFRESH_INTERVAL_MS = 100;
+const autoStart = new AutoStart();
 const timerClock = createSleepAwareClock((): number => performance.now(), (): number => Date.now());
 let engine: TimerEngine = new TimerEngine(readTimers(window.location.href), timerClock);
 const urlHistory = new UrlHistory({
@@ -53,6 +55,12 @@ function edit(operation: () => boolean, deferred: boolean = false): void {
 }
 
 const actions: Actions = {
+	setAutoStartTime(time: string | null): void {
+		const now: Date = new Date();
+		if (!autoStart.setTime(time, now)) return;
+		view.autoStartTime = time;
+		publish(now);
+	},
 	adjustElapsed(offset: -1 | 1): void {
 		urlHistory.flush();
 		const now: Date = new Date();
@@ -117,7 +125,13 @@ updateTitle();
 
 function refresh(): void {
 	engine.tick();
-	publish();
+	const now: Date = new Date();
+	const start: boolean = autoStart.shouldStart(now, engine.snapshot().status === 'paused');
+	if (start) {
+		urlHistory.flush();
+		engine.start();
+	}
+	publish(now, start);
 }
 
 function restoreFromUrl(): void {

@@ -892,3 +892,10 @@ Render left/right movement as one joined control in `timer-move.svelte`, and min
 Individual and overall reset buttons show a clock surrounded by two counterclockwise arrows. Keep the reset and trash artwork in `public/icons/reset.svg` and `public/icons/trash.svg`, loading them as external images rather than embedding SVG markup in the HTML. Keep accessible reset/delete labels and tooltips, and retain the existing running-state restrictions.
 
 Place the overall Reset immediately to the right of the elapsed/total display. Always reserve the width required for `total / total` with the current timer configuration. Shorter elapsed values and resets must not move the button; changing the configured total duration may update the reserved width. Keep the sizing copy hidden from both visual display and assistive technology.
+
+
+## Daily auto start
+
+Place a native time input at the right end of the Started at row. An empty value disables auto start by default; 00:00 remains a valid time. Off clears the setting. Keep this setting for the lifetime of the page, without adding it to the URL or persistent storage.
+
+Detect entry into the selected local minute during clock refreshes. Resume from the current elapsed time only when paused; consume the occurrence even if running or completed. A manual pause during that same minute must not trigger another start. The setting remains active for the next day. Selecting the current or an earlier time does not start immediately. Do not catch up after the selected minute has passed. Browser suspension can delay or prevent detection; this is not an operating-system alarm.
