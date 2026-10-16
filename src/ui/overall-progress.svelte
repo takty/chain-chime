@@ -1,5 +1,7 @@
 <script lang="ts">
 	import resetIcon from '../assets/icons/reset.svg?inline';
+	import playIcon from '../assets/icons/play.svg?inline';
+	import pauseIcon from '../assets/icons/pause.svg?inline';
 	import startTimeIcon from '../assets/icons/start-time.svg?inline';
 	import type { TimerView } from './view.ts';
 	import { formatTime } from './view.ts';
@@ -30,7 +32,9 @@
 			<button class="flex size-10 shrink-0 items-center justify-center rounded-lg border border-solid border-slate-300/40 bg-white p-0 enabled:cursor-pointer disabled:opacity-40 enabled:[&:hover]:bg-slate-50" type="button" onclick={() => actions.reset()} disabled={!snapshot.canReset} aria-label="Reset all" title="Reset all">
 				<img class="mx-auto block size-5" src={resetIcon} alt="" aria-hidden="true" />
 			</button>
-			<button class="min-h-10 min-w-24 rounded-lg border border-solid border-emerald-600/80 bg-emerald-600/80 px-4 py-2 font-[inherit] text-[length:inherit] [font-weight:inherit] text-white enabled:cursor-pointer disabled:opacity-40 enabled:[&:hover]:bg-emerald-900/80" type="button" onclick={() => actions.toggle()} disabled={snapshot.status === 'completed'}>{snapshot.status === 'running' ? 'Pause' : 'Start'}</button>
+			<button class="min-h-10 min-w-24 rounded-lg border border-solid border-emerald-600/80 bg-emerald-600/80 px-4 py-2 font-[inherit] text-[length:inherit] [font-weight:inherit] text-white enabled:cursor-pointer disabled:opacity-40 enabled:[&:hover]:bg-emerald-900/80" type="button" onclick={() => actions.toggle()} disabled={snapshot.status === 'completed'} aria-label={snapshot.status === 'running' ? 'Pause' : 'Start'} title={snapshot.status === 'running' ? 'Pause' : 'Start'}>
+				<img class="mx-auto block size-6" src={snapshot.status === 'running' ? pauseIcon : playIcon} alt="" aria-hidden="true" />
+			</button>
 		</div>
 	</div>
 	<div class="relative mt-4 h-2 overflow-hidden rounded-lg bg-slate-300" role="progressbar" aria-label="Total elapsed time" aria-valuemin="0" aria-valuemax={snapshot.totalMs} aria-valuenow={snapshot.elapsedMs} aria-valuetext={formatTime(snapshot.elapsedMs) + ' / ' + formatTime(snapshot.totalMs)}>
