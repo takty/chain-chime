@@ -1,12 +1,12 @@
 {
-	"id": "./",
+	"id": "/app/chain-chime/",
 	"name": "Chain Chime",
 	"short_name": "Chain Chime",
 	"start_url": "./",
 	"scope": "./",
 	"display": "standalone",
-	"theme_color": "#39a980",
-	"background_color": "#cbd5e1",
+	"theme_color": "#cad5e2",
+	"background_color": "#cad5e2",
 	"icons": [
 		{
 			"src": "icon-192.png",
