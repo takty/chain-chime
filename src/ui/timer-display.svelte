@@ -19,7 +19,7 @@
 	</div>
 
 	<div class="mt-4 flex items-center justify-between gap-2">
-		<p class="m-0 text-xs whitespace-nowrap text-slate-600 tabular-nums [&_span]:font-clock">Elapsed <span>{formatTime(timer.elapsedMs)}</span> / <span>{formatTime(timer.minutes * 60_000)}</span></p>
+		<p class="m-0 text-xs whitespace-nowrap text-slate-600 tabular-nums [&_span]:font-clock"><span>{formatTime(timer.elapsedMs)}</span> / <span>{formatTime(timer.minutes * 60_000)}</span></p>
 		<TimerReset {timer} {view} />
 	</div>
 </div>

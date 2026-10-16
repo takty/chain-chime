@@ -1,6 +1,4 @@
 <script lang="ts">
-	import plusIcon from '../assets/icons/plus.svg?inline';
-	import timerIcon from '../assets/icons/timer.svg?inline';
 	import type { TimerView } from './view.ts';
 	import { onMount, tick } from 'svelte';
 	import TimerCard from './timer-card.svelte';
@@ -9,7 +7,6 @@
 	let { view }: { view: TimerView; } = $props();
 	let snapshot = $derived(view.state);
 	let actions = $derived(view.actions);
-	let limits = $derived(view.limits);
 
 	let list: HTMLDivElement;
 	let scroller: TimerScroller | null = $state(null);
@@ -39,13 +36,9 @@
 </script>
 
 <section aria-labelledby="timers-heading">
-	<div class="flex items-center justify-between gap-5 mx-6 max-sm:mx-4">
-		<h2 class="m-0 inline-flex items-center gap-2 text-lg" id="timers-heading"><img class="block size-5" src={timerIcon} alt="" aria-hidden="true" /><span class="sr-only">Timers </span><span class="text-sm font-normal text-slate-600">{snapshot.timers.length + ' / ' + limits.maxCount}</span></h2>
-		<button class="inline-flex min-h-10 items-center gap-1 rounded-lg border border-solid border-white/40 bg-white/90 px-4 py-2 font-[inherit] text-[length:inherit] leading-[inherit] [font-weight:inherit] text-inherit shadow-xl enabled:cursor-pointer disabled:bg-white/40 enabled:[&:hover]:bg-slate-50" type="button" onclick={() => actions.add()} disabled={!snapshot.canAdd} aria-label="Add timer" title="Add timer"><img class="block size-4" src={plusIcon} alt="" aria-hidden="true" /><img class="block size-5" src={timerIcon} alt="" aria-hidden="true" /></button>
-	</div>
 	<!-- Keep cards in a row. Customize their appearance with the utility classes below. -->
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex (The horizontal scroll region must be keyboard focusable.) -->
-	<div bind:this={list} class="timer-list flex snap-x snap-proximity items-stretch justify-center-safe gap-4 overflow-x-auto px-(--timer-scroll-inset) pt-6 pb-8 [--timer-scroll-inset:--spacing(1)]" tabindex="0" role="region" aria-label="Timers (scroll horizontally)">
+	<div bind:this={list} class="timer-list flex snap-x snap-proximity items-stretch justify-center-safe gap-4 overflow-x-auto px-(--timer-scroll-inset) pb-10 [--timer-scroll-inset:--spacing(1)]" tabindex="0" role="region" aria-label="Timers (scroll horizontally)">
 		{#each snapshot.timers as timer (timer.index)}
 			<TimerCard {timer} {view} {moveTimer} />
 		{/each}
