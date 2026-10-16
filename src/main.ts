@@ -5,7 +5,8 @@ import App from './ui/app.svelte';
 import { TimerEngine } from './logic/engine.ts';
 import { AutoStart } from './logic/auto-start.ts';
 import { createSleepAwareClock } from './logic/clock.ts';
-import { readTimers, writeTimers } from './logic/url.ts';
+import { readTimers, writeTimers, serializeTimers } from './logic/url.ts';
+import { TimerPresets, TIMER_PRESETS_KEY, parsePreset } from './logic/timer-presets.ts';
 import {
 	MAX_TIMER_COUNT,
 	MIN_TIMER_MINUTES,
@@ -22,6 +23,10 @@ import type { Actions, TimerView } from './ui/view.ts';
 
 const REFRESH_INTERVAL_MS = 100;
 const autoStart = new AutoStart();
+const presets = new TimerPresets({
+	read: (): string | null => window.localStorage.getItem(TIMER_PRESETS_KEY),
+	write: (value: string): void => window.localStorage.setItem(TIMER_PRESETS_KEY, value),
+});
 const timerClock = createSleepAwareClock((): number => performance.now(), (): number => Date.now());
 let engine: TimerEngine = new TimerEngine(readTimers(window.location.href), timerClock);
 const urlHistory = new UrlHistory({
@@ -54,7 +59,36 @@ function edit(operation: () => boolean, deferred: boolean = false): void {
 	urlHistory.update(writeTimers(window.location.href, engine.configuration()), deferred);
 }
 
+function updatePresets(operation: () => void): void {
+	try {
+		operation();
+		view.savedTimers = presets.values();
+		view.error = '';
+	} catch {
+		view.error = 'Saved timers could not be read or written. Check browser storage permissions.';
+	}
+	publish();
+}
+
 const actions: Actions = {
+	savePreset(): void {
+		if (engine.snapshot().status === 'running') return;
+		updatePresets((): void => { presets.load(); presets.save(engine.configuration()); });
+	},
+	removePreset(): void {
+		if (engine.snapshot().status === 'running') return;
+		updatePresets((): void => { presets.load(); presets.remove(serializeTimers(engine.configuration())); });
+	},
+	loadPreset(value: string): void {
+		if (engine.snapshot().status === 'running' || !presets.values().includes(value)) return;
+		const timers: TimerConfig[] | null = parsePreset(value);
+		if (!timers) return;
+		urlHistory.flush();
+		engine = new TimerEngine(timers, timerClock);
+		publish(new Date(), true);
+		updateTitle();
+		urlHistory.update(writeTimers(window.location.href, timers));
+	},
 	setAutoStartTime(time: string | null): void {
 		const now: Date = new Date();
 		if (!autoStart.setTime(time, now)) return;
@@ -118,7 +152,7 @@ const app = mount(App, {
 	target: document.querySelector<HTMLDivElement>('#app')!,
 	props: { view: viewStore },
 });
-publish();
+updatePresets((): void => presets.load());
 updateTitle();
 
 // Measure time using the clock, not the number of callbacks. -------------------
@@ -147,6 +181,10 @@ function handleVisibilityChange(): void {
 	refresh();
 }
 
+function handleStorage(event: StorageEvent): void {
+	if (event.key === TIMER_PRESETS_KEY || event.key === null) updatePresets((): void => presets.load());
+}
+
 function handlePageHide(): void {
 	urlHistory.flush();
 }
@@ -155,6 +193,7 @@ const interval: number = window.setInterval(refresh, REFRESH_INTERVAL_MS);
 document.addEventListener('visibilitychange', handleVisibilityChange);
 window.addEventListener('popstate', restoreFromUrl);
 window.addEventListener('pagehide', handlePageHide);
+window.addEventListener('storage', handleStorage);
 if (import.meta.hot) {
 	import.meta.hot.dispose((): void => {
 		window.clearInterval(interval);
@@ -162,6 +201,7 @@ if (import.meta.hot) {
 		document.removeEventListener('visibilitychange', handleVisibilityChange);
 		window.removeEventListener('popstate', restoreFromUrl);
 		window.removeEventListener('pagehide', handlePageHide);
+		window.removeEventListener('storage', handleStorage);
 		void unmount(app);
 	});
 }

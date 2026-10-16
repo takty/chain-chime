@@ -899,3 +899,10 @@ Place the overall Reset immediately to the right of the elapsed/total display. A
 Place a native time input at the right end of the Started at row. An empty value disables auto start by default; 00:00 remains a valid time. Off clears the setting. Keep this setting for the lifetime of the page, without adding it to the URL or persistent storage.
 
 Detect entry into the selected local minute during clock refreshes. Resume from the current elapsed time only when paused; consume the occurrence even if running or completed. A manual pause during that same minute must not trigger another start. The setting remains active for the next day. Selecting the current or an earlier time does not start immediately. Do not catch up after the selected minute has passed. Browser suspension can delay or prevent detection; this is not an operating-system alarm.
+
+
+## Saved timer combinations
+
+Replace the timer count with a select and save/delete buttons. Store canonical `ts` values (for example `1_50-3_30`) as a JSON string array in Local Storage under `chain-chime.timer-presets.v1`. Do not include elapsed time or auto-start time. Prevent duplicate entries. The selection is derived from the current timer configuration on every change; show `-` when no saved combination matches.
+
+Selecting, saving, and deleting registrations are available only when not running and no card animation is pending. Selecting a combination resets elapsed time to zero and leaves playback paused, updates the URL through the existing history mechanism, and preserves the auto-start setting. Deleting a registration does not delete or change the current timers. Restore saved entries on page load and synchronize storage changes from other tabs. Storage failures must be reported without presenting failed writes as successful.

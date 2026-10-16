@@ -16,7 +16,13 @@ export function readTimers(url: string): TimerConfig[] {
 
 export function writeTimers(url: string, timers: readonly TimerConfig[]): string {
 	const next: URL = new URL(url);
-	const value: string = timers.map((t: TimerConfig): string => t.divisions === 0 || t.divisions === 1 ? `${t.minutes}` : `${t.minutes}-${t.divisions}`).join('_');
+	const value: string = serializeTimers(timers);
 	next.searchParams.set('ts', value);
 	return next.href;
+}
+
+/** Use the same canonical representation in URLs and saved combinations. */
+export function serializeTimers(timers: readonly TimerConfig[]): string {
+	return timers.map((timer: TimerConfig): string => timer.divisions === 0 || timer.divisions === 1
+		? `${timer.minutes}` : `${timer.minutes}-${timer.divisions}`).join('_');
 }

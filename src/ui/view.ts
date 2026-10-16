@@ -18,6 +18,9 @@ export interface DisplayState {
 	canRemove : boolean;
 }
 export interface Actions {
+	savePreset(): void;
+	removePreset(): void;
+	loadPreset(value: string): void;
 	setAutoStartTime(time: string | null): void;
 	toggle(): void;
 	reset(): void;
@@ -49,6 +52,7 @@ export function formatStartTime(now: Date, elapsedMs: number): string {
 	return formatClockTime(new Date(now.getTime() - elapsedMs));
 }
 export interface TimerView {
+	savedTimers: string[];
 	autoStartTime: string | null;
 	currentTime : string;
 	startTime   : string;
@@ -73,6 +77,7 @@ export function updateClockDisplay(view: Pick<TimerView, 'currentTime' | 'startT
 
 export function createView(state: DisplayState, actions: Actions, limits: InputLimits): TimerView {
 	return {
+		savedTimers: [],
 		autoStartTime: null,
 		currentTime: '',
 		startTime: '',
