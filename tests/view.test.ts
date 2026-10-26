@@ -3,6 +3,22 @@ import { test } from 'node:test';
 import { formatTime, formatStartTime, updateClockDisplay } from '../src/ui/view.ts';
 import { TimerEngine } from '../src/logic/engine.ts';
 
+test('end time includes all configured timers and follows duration changes across midnight', (): void => {
+	const engine = new TimerEngine([{ minutes: 10, divisions: 1 }, { minutes: 20, divisions: 1 }], (): number => 0);
+	const view = { state: engine.snapshot(), currentTime: '', startTime: '', startTimeMs: null as number | null, endTime: '' };
+	const now = new Date(2026, 9, 26, 23, 50, 30);
+	updateClockDisplay(view, now);
+	assert.equal(view.endTime, '00:20');
+	engine.start();
+	view.state = engine.snapshot();
+	updateClockDisplay(view, now, true);
+	engine.update(1, { minutes: 35, divisions: 1 });
+	view.state = engine.snapshot();
+	updateClockDisplay(view, now);
+	assert.equal(view.startTime, '23:50');
+	assert.equal(view.endTime, '00:35');
+});
+
 test('rounds time left up and elapsed time down', (): void => {
 	assert.equal(formatTime(59_001, true), '1′00″');
 	assert.equal(formatTime(59_001), '0′59″');
@@ -25,9 +41,10 @@ test('holds the adjusted start minute across clock jitter and rebases on another
 	engine.start();
 	const wallBase: number = new Date(2026, 9, 16, 9, 13, 20, 500).getTime();
 	engine.adjustElapsed(1, 20_500);
-	const view = { state: engine.snapshot(), currentTime: '', startTime: '' };
+	const view = { state: engine.snapshot(), currentTime: '', startTime: '', startTimeMs: null as number | null, endTime: '' };
 	updateClockDisplay(view, new Date(wallBase), true);
 	assert.equal(view.startTime, '09:12');
+	assert.equal(view.endTime, '09:22');
 
 	for (const [wallDelta, clockDelta] of [[100, 100.2], [200, 199.8], [300, 300.2], [400, 399.8]]) {
 		clock = clockDelta;
@@ -35,25 +52,28 @@ test('holds the adjusted start minute across clock jitter and rebases on another
 		view.state = engine.snapshot();
 		updateClockDisplay(view, new Date(wallBase + wallDelta));
 		assert.equal(view.startTime, '09:12');
+		assert.equal(view.endTime, '09:22');
 	}
 
 	engine.adjustElapsed(-1, 20_900);
 	view.state = engine.snapshot();
 	updateClockDisplay(view, new Date(wallBase + 400), true);
 	assert.equal(view.startTime, '09:13');
+	assert.equal(view.endTime, '09:23');
 });
 
 test('updates while paused or completed and captures a new start time on resume', (): void => {
 	let clock: number = 0;
 	const engine = new TimerEngine([{ minutes: 10, divisions: 1 }], (): number => clock);
 	const wallBase: number = new Date(2026, 9, 16, 9, 12).getTime();
-	const view = { state: engine.snapshot(), currentTime: '', startTime: '' };
+	const view = { state: engine.snapshot(), currentTime: '', startTime: '', startTimeMs: null as number | null, endTime: '' };
 	const publish = (wallDelta: number, rebase: boolean = false): void => {
 		view.state = engine.snapshot();
 		updateClockDisplay(view, new Date(wallBase + wallDelta), rebase);
 	};
 	publish(0);
 	assert.equal(view.startTime, '09:12');
+	assert.equal(view.endTime, '09:22');
 	engine.start();
 	publish(0, true);
 	clock = 60_000;
@@ -62,6 +82,7 @@ test('updates while paused or completed and captures a new start time on resume'
 	assert.equal(view.startTime, '09:12');
 	publish(120_000);
 	assert.equal(view.startTime, '09:13');
+	assert.equal(view.endTime, '09:23');
 	engine.start();
 	publish(180_000, true);
 	assert.equal(view.startTime, '09:14');
@@ -70,6 +91,7 @@ test('updates while paused or completed and captures a new start time on resume'
 	publish(240_000);
 	assert.equal(view.startTime, '09:14');
 	assert.equal(view.currentTime, '09:16');
+	assert.equal(view.endTime, '09:24');
 	clock = 600_000;
 	engine.tick();
 	publish(720_000);

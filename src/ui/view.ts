@@ -52,25 +52,29 @@ export function formatStartTime(now: Date, elapsedMs: number): string {
 	return formatClockTime(new Date(now.getTime() - elapsedMs));
 }
 export interface TimerView {
-	savedTimers: string[];
+	savedTimers  : string[];
 	autoStartTime: string | null;
-	currentTime : string;
-	startTime   : string;
-	state      : DisplayState;
-	limits     : InputLimits;
-	actions    : Actions;
-	error      : string;
-	formatTime : typeof formatTime;
+	currentTime  : string;
+	startTime    : string;
+	startTimeMs  : number | null;
+	endTime      : string;
+	state        : DisplayState;
+	limits       : InputLimits;
+	actions      : Actions;
+	error        : string;
+	formatTime   : typeof formatTime;
 	marks(divisions: number): number[];
 	changeValue(event: Event, index: number, field: 'minutes' | 'divisions'): void;
 }
 
 /** Keep the effective start time stable during playback until explicitly rebased. */
-export function updateClockDisplay(view: Pick<TimerView, 'currentTime' | 'startTime' | 'state'>, now: Date, rebaseStart: boolean = false): void {
+export function updateClockDisplay(view: Pick<TimerView, 'currentTime' | 'startTime' | 'startTimeMs' | 'endTime' | 'state'>, now: Date, rebaseStart: boolean = false): void {
 	view.currentTime = formatClockTime(now);
-	if (view.state.status !== 'running' || rebaseStart || view.startTime === '') {
+	if (view.state.status !== 'running' || rebaseStart || view.startTimeMs === null) {
+		view.startTimeMs = now.getTime() - view.state.elapsedMs;
 		view.startTime = formatStartTime(now, view.state.elapsedMs);
 	}
+	view.endTime = formatClockTime(new Date(view.startTimeMs + view.state.totalMs));
 }
 
 // Display state ---------------------------------------------------------------
@@ -81,6 +85,8 @@ export function createView(state: DisplayState, actions: Actions, limits: InputL
 		autoStartTime: null,
 		currentTime: '',
 		startTime: '',
+		startTimeMs: null,
+		endTime: '',
 		state,
 		limits,
 		actions,

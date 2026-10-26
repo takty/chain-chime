@@ -42,7 +42,7 @@
 		{#each boundaries as position (position)}<span class="absolute inset-y-0 w-1 -translate-x-1/2 bg-white/90" style:left={position + '%'} aria-hidden="true"></span>{/each}
 	</div>
 	<div class="mt-4 flex flex-wrap items-center justify-between gap-2">
-		<p class="m-0 inline-flex items-center gap-2 text-xs text-slate-600" title="Started at"><img class="block size-5" src={startTimeIcon} alt="" aria-hidden="true" /><span class="sr-only">Started at </span><span class="font-clock tabular-nums">{view.startTime}</span></p>
+		<p class="m-0 inline-flex items-center gap-2 text-xs text-slate-600" title="Start – End"><img class="block size-5" src={startTimeIcon} alt="" aria-hidden="true" /><span class="font-clock whitespace-nowrap tabular-nums"><span class="sr-only">Started at </span>{view.startTime} – <span class="sr-only">Ends at </span>{view.endTime}</span></p>
 		<AutoStart time={view.autoStartTime} setTime={actions.setAutoStartTime} />
 	</div>
 </section>
