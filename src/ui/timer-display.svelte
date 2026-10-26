@@ -10,7 +10,10 @@
 <div class="pb-4">
 	<div class="mb-4 flex items-start justify-between gap-2">
 		<p class="m-0 font-clock text-5xl leading-11 font-medium tracking-tighter tabular-nums">{formatTime(timer.remainingMs, true)}</p>
-		<h3 class="m-0 flex size-6 shrink-0 items-center justify-center rounded-full text-sm leading-none font-bold text-white tabular-nums" style:background-image={'conic-gradient(color-mix(in oklab, var(--color-slate-600) 40%, transparent) ' + (timer.progress * 100) + '%, color-mix(in oklab, var(--color-emerald-600) 80%, transparent) 0)'} id={'timer-title-' + timer.index}><span class="sr-only">Timer </span>{timer.index + 1}</h3>
+		<h3 class="relative isolate m-0 flex size-6 shrink-0 items-center justify-center text-sm leading-none font-bold text-white tabular-nums" id={'timer-title-' + timer.index}>
+			<span class="shadow-sm absolute inset-0 -z-10 scale-[2.7] rounded-full" style:background-image={'conic-gradient(color-mix(in oklab, var(--color-slate-600) 40%, transparent) ' + (timer.progress * 100) + '%, color-mix(in oklab, var(--color-emerald-600) 80%, transparent) 0)'} aria-hidden="true"></span>
+			<span class="sr-only">Timer </span>{timer.index + 1}
+		</h3>
 	</div>
 
 	<div class="relative h-2 overflow-hidden rounded-sm bg-slate-300" role="progressbar" aria-label={'Timer ' + (timer.index + 1) + ' progress'} aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(timer.progress * 100)} aria-valuetext={'Time left: ' + formatTime(timer.remainingMs, true)}>
