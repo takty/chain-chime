@@ -42,6 +42,8 @@ const urlHistory = new UrlHistory({
 
 function publish(now: Date = new Date(), rebaseStart: boolean = false): void {
 	view.state = engine.snapshot();
+	if (view.state.status === 'running') window.addEventListener('beforeunload', handleBeforeUnload);
+	else window.removeEventListener('beforeunload', handleBeforeUnload);
 	updateClockDisplay(view, now, rebaseStart);
 	viewStore.set({ ...view });
 }
@@ -189,6 +191,13 @@ function handlePageHide(): void {
 	urlHistory.flush();
 }
 
+function handleBeforeUnload(event: BeforeUnloadEvent): void {
+	engine.tick();
+	if (engine.snapshot().status !== 'running') return;
+	event.preventDefault();
+	event.returnValue = 'true';
+}
+
 const interval: number = window.setInterval(refresh, REFRESH_INTERVAL_MS);
 document.addEventListener('visibilitychange', handleVisibilityChange);
 window.addEventListener('popstate', restoreFromUrl);
@@ -202,6 +211,7 @@ if (import.meta.hot) {
 		window.removeEventListener('popstate', restoreFromUrl);
 		window.removeEventListener('pagehide', handlePageHide);
 		window.removeEventListener('storage', handleStorage);
+		window.removeEventListener('beforeunload', handleBeforeUnload);
 		void unmount(app);
 	});
 }
